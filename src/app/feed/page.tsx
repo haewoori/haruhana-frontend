@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSelector } from 'react-redux';
 import {
     IoIosArrowBack,
     IoIosArrowForward,
@@ -71,6 +73,9 @@ interface Post {
 }
 
 const FeedPage = () => {
+    const router = useRouter();
+    const { accessToken, isAuthenticated } = useSelector((state: any) => state.auth);
+
     const [leftArrowHovered, setLeftArrowHovered] = useState(false);
     const [rightArrowHovered, setRightArrowHovered] = useState(false);
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -130,6 +135,14 @@ const FeedPage = () => {
     ]);
 
     const calendarRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        console.log('현재 액세스 토큰:', accessToken);
+
+        if (!accessToken) {
+            router.push('/');
+        }
+    }, [isAuthenticated, accessToken, router]);
 
     const changeDate = (days: number) => {
         const newDate = new Date(currentDate);
