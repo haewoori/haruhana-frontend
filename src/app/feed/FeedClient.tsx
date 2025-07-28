@@ -1,5 +1,6 @@
 'use client';
 
+import { createCard } from '@/api/card/createCardApi';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
@@ -143,24 +144,25 @@ const FeedClient = () => {
         };
     }, []);
 
-    // 새 포스트 저장 함수 - accessToken 기반
-    const handleSavePost = (content: string, color: string) => {
-        // 실제 API 호출 로직은 추후 추가 예정
-        // 현재는 임시로 로컬 상태에만 추가
-        // const newPost: Post = {
-        //     id: Date.now().toString(),
-        //     author: {
-        //         name: currentUser.name,
-        //         profileImage: currentUser.profileImage
-        //     },
-        //     content,
-        //     color,
-        //     isMyCard: true,
-        //     createdAt: new Date().toISOString()
-        // };
-        //
-        // setPosts([newPost, ...posts]);
-        // setShowPostModal(false);
+    // 새 포스트 저장 함수
+    const handleSavePost = async (content: string, color: string) => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            await createCard(content, color);
+            setShowPostModal(false);
+
+            const response = await getCards(currentDate);
+            const formattedPosts = convertCardsToUIFormat(response);
+            setPosts(formattedPosts);
+
+        } catch (err) {
+            console.error('카드 생성 중 오류가 발생했습니다:', err);
+            setError('카드 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // 포스트 삭제 함수 - accessToken 기반
