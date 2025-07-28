@@ -381,16 +381,36 @@ export const ReactionBadge = styled.div<{ isMine?: boolean }>`
             ? colors.primary.main
             : colors.neutral[200]};
     position: relative;
+    cursor: ${props => props.isMine ? 'pointer' : 'default'};
 
     &:hover {
-        transform: scale(1.05);
+        transform: ${props => props.isMine ? 'scale(1.05)' : 'none'};
         background-color: ${props => props.isMine
                 ? `${colors.primary.light}`
-                : colors.primary.light};
+                : colors.neutral[100]};
         border-color: ${props => props.isMine
                 ? colors.primary.main
-                : colors.primary.light};
+                : colors.neutral[200]};
     }
+
+    ${props => props.isMine && `
+        &:hover::before {
+            content: '✕';
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: ${colors.error};
+            color: white;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    `}
 `;
 
 export const EmojiPickerContainer = styled.div<{ position: 'top' | 'bottom' }>`

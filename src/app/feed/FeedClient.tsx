@@ -23,6 +23,7 @@ import { convertCardsToUIFormat } from '@/utils/cardUtils';
 import { getEmojiList } from '@/api/card/getEmojiListApi';
 import { EmojiData } from '@/api/card/getEmojiListApi/types';
 import { addEmoji } from '@/api/card/addEmojiApi';
+import { deleteEmoji } from '@/api/card/deleteEmojiApi';
 
 import {
     FeedContainer,
@@ -238,6 +239,32 @@ const FeedClient = () => {
             }
     };
 
+    // 이모지 삭제 함수
+    const handleDeleteEmoji = async (postId: string, emoji: string) => {
+      const emojiData = emojiList.find(item => item.emoji === emoji);
+
+      if (!emojiData) {
+        console.error('삭제할 이모지 데이터를 찾을 수 없습니다.');
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        await deleteEmoji(postId, emojiData.emojiId);
+
+        const response = await getCards(currentDate);
+        const formattedPosts = convertCardsToUIFormat(response);
+        setPosts(formattedPosts);
+      } catch (err) {
+        console.error('이모지 삭제 중 오류가 발생했습니다:', err);
+        setError('이모지 삭제 중 오류가 발생했습니다. 다시 시도해주세요.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     // 이모지 선택기 토글 함수
     const toggleEmojiPicker = (postId: string, event?: React.MouseEvent) => {
         if (activeEmojiPicker === postId) {
@@ -357,11 +384,16 @@ const FeedClient = () => {
                                             <ReactionBadge
                                                 key={index}
                                                 isMine={reaction.isMine}
-                                                title={reaction.isMine ? "내가 추가한 이모지" : ""}
-                                            >
-                                                <EmojiIcon>{reaction.emoji}</EmojiIcon>
-                                                <ReactionCount>{reaction.count}</ReactionCount>
-                                            </ReactionBadge>
+                                            title={reaction.isMine ? "클릭하여 이모지 삭제" : ""}
+                                            onClick={() => {
+                                              if (reaction.isMine) {
+                                                  handleDeleteEmoji(post.id, reaction.emoji);
+                                              }
+                                            }}
+                                          >
+                                            <EmojiIcon>{reaction.emoji}</EmojiIcon>
+                                            <ReactionCount>{reaction.count}</ReactionCount>
+                                          </ReactionBadge>
                                         ))}
                                         <div style={{ position: 'relative' }}>
                                             <ReactionButton
