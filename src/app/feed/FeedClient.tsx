@@ -16,7 +16,9 @@ import {
 
 import Calendar from '@/components/Calendar/Calendar';
 import PostModal from '@/components/PostModal/PostModal';
-import { formatDate, formatGroupTitle } from '@/utils/dateUtils';
+import { formatDate, formatGroupTitle, formatDateToString } from '@/utils/dateUtils';
+import { getCards } from '@/api/card/searchCardApi/searchCardClientApi';
+import { convertCardsToUIFormat } from '@/utils/cardUtils';
 
 import {
     FeedContainer,
@@ -49,14 +51,8 @@ import {
     ReactionButton,
     FloatingButton,
     AnnouncementIcon,
-    cardColorOptions
+    cardColorOptions, LoadingContainer, LoadingSpinner, EmptyStateText, ErrorText
 } from "./page.style";
-
-// 임시
-const currentUser = {
-    name: "홍길동",
-    profileImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuDMsdQP9vZedjynJse1GaNBRueRKONNk1_DMD0xv0w5lXEtP_t9i5ecs1s9LBXVz3NJqpjebP7pk_TUV42wyhzAOuy7oAKdARyJaYysVNeFWxWaAWrUnWkHD9bG55OyrLLrCjchigWRccFh7H3WOsoYTMEesaVeiqeVnAGWa5psuRfwiYHNezuIBcLuuQ-IYU1h8bo4QIxliebx2DihSZRzYUTrxpjhNyLoIm4LFGqw3FiQDk4lcpGGrCsPACzrdrA-2CTOXgLqrw"
-};
 
 interface Post {
     id: string;
@@ -70,6 +66,8 @@ interface Post {
         emoji: string;
         count: number;
     }[];
+    isMyCard?: boolean;
+    createdAt?: string;
 }
 
 const FeedClient = () => {
@@ -81,61 +79,13 @@ const FeedClient = () => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [showCalendar, setShowCalendar] = useState(false);
     const [showPostModal, setShowPostModal] = useState(false);
-    const [posts, setPosts] = useState<Post[]>([
-        {
-            id: '1',
-            author: {
-                name: '홍길동',
-                profileImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMsdQP9vZedjynJse1GaNBRueRKONNk1_DMD0xv0w5lXEtP_t9i5ecs1s9LBXVz3NJqpjebP7pk_TUV42wyhzAOuy7oAKdARyJaYysVNeFWxWaAWrUnWkHD9bG55OyrLLrCjchigWRccFh7H3WOsoYTMEesaVeiqeVnAGWa5psuRfwiYHNezuIBcLuuQ-IYU1h8bo4QIxliebx2DihSZRzYUTrxpjhNyLoIm4LFGqw3FiQDk4lcpGGrCsPACzrdrA-2CTOXgLqrw'
-            },
-            content: '수신 30분 공부하기',
-            color: 'blue',
-            reactions: [
-                { emoji: '😄', count: 7 },
-                { emoji: '👍', count: 10 },
-                { emoji: '❤️', count: 100 }
-            ]
-        },
-        {
-            id: '2',
-            author: {
-                name: '홍길동',
-                profileImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMsdQP9vZedjynJse1GaNBRueRKONNk1_DMD0xv0w5lXEtP_t9i5ecs1s9LBXVz3NJqpjebP7pk_TUV42wyhzAOuy7oAKdARyJaYysVNeFWxWaAWrUnWkHD9bG55OyrLLrCjchigWRccFh7H3WOsoYTMEesaVeiqeVnAGWa5psuRfwiYHNezuIBcLuuQ-IYU1h8bo4QIxliebx2DihSZRzYUTrxpjhNyLoIm4LFGqw3FiQDk4lcpGGrCsPACzrdrA-2CTOXgLqrw'
-            },
-            content: '오늘 퇴근하고 술 한잔 할 사람~~!',
-            color: 'green'
-        },
-        {
-            id: '3',
-            author: {
-                name: '김철수',
-                profileImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMsdQP9vZedjynJse1GaNBRueRKONNk1_DMD0xv0w5lXEtP_t9i5ecs1s9LBXVz3NJqpjebP7pk_TUV42wyhzAOuy7oAKdARyJaYysVNeFWxWaAWrUnWkHD9bG55OyrLLrCjchigWRccFh7H3WOsoYTMEesaVeiqeVnAGWa5psuRfwiYHNezuIBcLuuQ-IYU1h8bo4QIxliebx2DihSZRzYUTrxpjhNyLoIm4LFGqw3FiQDk4lcpGGrCsPACzrdrA-2CTOXgLqrw'
-            },
-            content: '여신 업무 관련 질문 있으신 분?',
-            color: 'purple'
-        },
-        {
-            id: '4',
-            author: {
-                name: '이영희',
-                profileImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMsdQP9vZedjynJse1GaNBRueRKONNk1_DMD0xv0w5lXEtP_t9i5ecs1s9LBXVz3NJqpjebP7pk_TUV42wyhzAOuy7oAKdARyJaYysVNeFWxWaAWrUnWkHD9bG55OyrLLrCjchigWRccFh7H3WOsoYTMEesaVeiqeVnAGWa5psuRfwiYHNezuIBcLuuQ-IYU1h8bo4QIxliebx2DihSZRzYUTrxpjhNyLoIm4LFGqw3FiQDk4lcpGGrCsPACzrdrA-2CTOXgLqrw'
-            },
-            content: '다음 주 영업 목표 달성 가능할까요?',
-            color: 'orange'
-        },
-        {
-            id: '5',
-            author: {
-                name: '박지민',
-                profileImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMsdQP9vZedjynJse1GaNBRueRKONNk1_DMD0xv0w5lXEtP_t9i5ecs1s9LBXVz3NJqpjebP7pk_TUV42wyhzAOuy7oAKdARyJaYysVNeFWxWaAWrUnWkHD9bG55OyrLLrCjchigWRccFh7H3WOsoYTMEesaVeiqeVnAGWa5psuRfwiYHNezuIBcLuuQ-IYU1h8bo4QIxliebx2DihSZRzYUTrxpjhNyLoIm4LFGqw3FiQDk4lcpGGrCsPACzrdrA-2CTOXgLqrw'
-            },
-            content: '주말에 같이 스터디하실 분 구합니다!',
-            color: 'pink'
-        }
-    ]);
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const calendarRef = useRef<HTMLDivElement>(null);
 
+    // 인증 체크
     useEffect(() => {
         console.log('현재 액세스 토큰:', accessToken);
 
@@ -144,17 +94,42 @@ const FeedClient = () => {
         }
     }, [isAuthenticated, accessToken, router]);
 
+    // 날짜 변경 시 카드 데이터 로드
+    useEffect(() => {
+        const fetchCards = async () => {
+            setIsLoading(true);
+            setError(null);
+
+            try {
+                const response = await getCards(currentDate);
+                const formattedPosts = convertCardsToUIFormat(response);
+                setPosts(formattedPosts);
+            } catch (err) {
+                console.error('카드 데이터를 불러오는 중 오류가 발생했습니다:', err);
+                setError('카드 데이터를 불러오는 중 오류가 발생했습니다. 새로고침 해주세요.');
+                setPosts([]);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchCards();
+    }, [currentDate]);
+
+    // 날짜 변경 함수
     const changeDate = (days: number) => {
         const newDate = new Date(currentDate);
         newDate.setDate(newDate.getDate() + days);
         setCurrentDate(newDate);
     };
 
+    // 캘린더에서 날짜 선택 함수
     const selectDate = (date: Date) => {
         setCurrentDate(date);
         setShowCalendar(false);
     };
 
+    // 캘린더 외부 클릭 감지
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
@@ -168,25 +143,34 @@ const FeedClient = () => {
         };
     }, []);
 
+    // 새 포스트 저장 함수 - accessToken 기반
     const handleSavePost = (content: string, color: string) => {
-        const newPost: Post = {
-            id: Date.now().toString(),
-            author: {
-                name: currentUser.name,
-                profileImage: currentUser.profileImage
-            },
-            content,
-            color
-        };
-
-        setPosts([newPost, ...posts]);
-        setShowPostModal(false);
+        // 실제 API 호출 로직은 추후 추가 예정
+        // 현재는 임시로 로컬 상태에만 추가
+        // const newPost: Post = {
+        //     id: Date.now().toString(),
+        //     author: {
+        //         name: currentUser.name,
+        //         profileImage: currentUser.profileImage
+        //     },
+        //     content,
+        //     color,
+        //     isMyCard: true,
+        //     createdAt: new Date().toISOString()
+        // };
+        //
+        // setPosts([newPost, ...posts]);
+        // setShowPostModal(false);
     };
 
+    // 포스트 삭제 함수 - accessToken 기반
     const handleDeletePost = (postId: string) => {
+        // 실제 API 호출 로직은 추후 추가 예정
+        // 현재는 임시로 로컬 상태에서만 삭제
         setPosts(posts.filter(post => post.id !== postId));
     };
 
+    // TODO: isLoading 디자인 개선
     return (
         <FeedContainer>
             <Header>
@@ -240,40 +224,53 @@ const FeedClient = () => {
                     </AnnouncementBox>
 
                     <PostsContainer>
-                        {posts.map(post => (
-                            <PostCard key={post.id} bgColor={post.color}>
-                                {post.author.name === currentUser.name && (
-                                    <CloseButton
-                                        aria-label="게시물 삭제"
-                                        onClick={() => handleDeletePost(post.id)}
-                                    >
-                                        <MdClose size={20} />
-                                    </CloseButton>
-                                )}
-                                <ProfileSection>
-                                    <ProfileImage
-                                        alt={`${post.author.name} 프로필 사진`}
-                                        src={post.author.profileImage}
-                                    />
-                                    <UserInfo>
-                                        <UserName>{post.author.name}</UserName>
-                                        <UserGroup>{formatGroupTitle(currentDate)}</UserGroup>
-                                    </UserInfo>
-                                </ProfileSection>
-                                <PostContent>{post.content}</PostContent>
-                                <ReactionContainer>
-                                    {post.reactions?.map((reaction, index) => (
-                                        <ReactionBadge key={index}>
-                                            <EmojiIcon>{reaction.emoji}</EmojiIcon>
-                                            <ReactionCount>{reaction.count}</ReactionCount>
-                                        </ReactionBadge>
-                                    ))}
-                                    <ReactionButton aria-label="반응 추가">
-                                        <MdAdd size={15} />
-                                    </ReactionButton>
-                                </ReactionContainer>
-                            </PostCard>
-                        ))}
+                        {isLoading ? (
+                            <LoadingContainer>
+                                <LoadingSpinner />
+                                <EmptyStateText>데이터를 불러오는 중입니다...</EmptyStateText>
+                            </LoadingContainer>
+                        ) : error ? (
+                            <ErrorText>{error}</ErrorText>
+                        ) : posts.length === 0 ? (
+                            <EmptyStateText>
+                                이 날짜에 작성된 카드가 없습니다. 첫 번째 카드를 작성해보세요!
+                            </EmptyStateText>
+                        ) : (
+                            posts.map(post => (
+                                <PostCard key={post.id} bgColor={post.color}>
+                                    {post.isMyCard && (
+                                        <CloseButton
+                                            aria-label="게시물 삭제"
+                                            onClick={() => handleDeletePost(post.id)}
+                                        >
+                                            <MdClose size={20} />
+                                        </CloseButton>
+                                    )}
+                                    <ProfileSection>
+                                        <ProfileImage
+                                            alt={`${post.author.name} 프로필 사진`}
+                                            src={post.author.profileImage}
+                                        />
+                                        <UserInfo>
+                                            <UserName>{post.author.name}</UserName>
+                                            <UserGroup>{formatGroupTitle(currentDate)}</UserGroup>
+                                        </UserInfo>
+                                    </ProfileSection>
+                                    <PostContent>{post.content}</PostContent>
+                                    <ReactionContainer>
+                                        {post.reactions?.map((reaction, index) => (
+                                            <ReactionBadge key={index}>
+                                                <EmojiIcon>{reaction.emoji}</EmojiIcon>
+                                                <ReactionCount>{reaction.count}</ReactionCount>
+                                            </ReactionBadge>
+                                        ))}
+                                        <ReactionButton aria-label="반응 추가">
+                                            <MdAdd size={15} />
+                                        </ReactionButton>
+                                    </ReactionContainer>
+                                </PostCard>
+                            ))
+                        )}
                     </PostsContainer>
                 </MainContent>
 
