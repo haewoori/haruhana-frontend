@@ -20,6 +20,9 @@ import PostModal from '@/components/PostModal/PostModal';
 import { formatDate, formatGroupTitle, formatDateToString } from '@/utils/dateUtils';
 import { getCards } from '@/api/card/searchCardApi/searchCardClientApi';
 import { convertCardsToUIFormat } from '@/utils/cardUtils';
+import { addEmoji } from '@/api/card/addEmojiApi';
+import { getEmojiList } from '@/api/card/getEmojiListApi';
+import { EmojiData } from '@/api/card/getEmojiListApi/types';
 
 import {
     FeedContainer,
@@ -52,7 +55,14 @@ import {
     ReactionButton,
     FloatingButton,
     AnnouncementIcon,
-    cardColorOptions, LoadingContainer, LoadingSpinner, EmptyStateText, ErrorText
+    cardColorOptions,
+    LoadingContainer,
+    LoadingSpinner,
+    EmptyStateText,
+    ErrorText,
+    EmojiPickerContainer,
+    EmojiButton,
+    EmojiPickerTitle
 } from "./page.style";
 import {deleteCard} from "@/api/card/deleteCardApi";
 
@@ -84,6 +94,9 @@ const FeedClient = () => {
     const [posts, setPosts] = useState<Post[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [activeEmojiPicker, setActiveEmojiPicker] = useState<string | null>(null);
+    const [emojiPickerPosition, setEmojiPickerPosition] = useState<'top' | 'bottom'>('top');
+    const [emojiList, setEmojiList] = useState<EmojiData[]>([]);
 
     const calendarRef = useRef<HTMLDivElement>(null);
 
@@ -95,6 +108,20 @@ const FeedClient = () => {
             router.push('/');
         }
     }, [isAuthenticated, accessToken, router]);
+
+    // 컴포넌트 마운트 시 이모지 리스트 로드
+    useEffect(() => {
+        const fetchEmojiList = async () => {
+            try {
+                const response = await getEmojiList();
+                setEmojiList(response.emojiVoList);
+            } catch (err) {
+                console.error('이모지 리스트를 불러오는 중 오류가 발생했습니다:', err);
+            }
+        };
+
+        fetchEmojiList();
+    }, []);
 
     // 날짜 변경 시 카드 데이터 로드
     useEffect(() => {
@@ -190,6 +217,55 @@ const FeedClient = () => {
         }
     };
 
+    // 이모지 추가 함수
+    const handleAddEmoji = async (postId: string, emojiId: string) => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            await addEmoji(postId, emojiId);
+            setActiveEmojiPicker(null);
+
+            const response = await getCards(currentDate);
+            const formattedPosts = convertCardsToUIFormat(response);
+            setPosts(formattedPosts);
+        } catch (err) {
+            console.error('이모지 추가 중 오류가 발생했습니다:', err);
+            setError('이모지 추가 중 오류가 발생했습니다. 다시 시도해주세요.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // 이모지 선택기 토글 함수
+    const toggleEmojiPicker = (postId: string, event?: React.MouseEvent) => {
+        if (activeEmojiPicker === postId) {
+            setActiveEmojiPicker(null);
+        } else {
+            if (event && event.currentTarget) {
+                setEmojiPickerPosition('top');
+            }
+
+            setActiveEmojiPicker(postId);
+        }
+    };
+
+    // 이모지 선택기 외부 클릭 감지
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (activeEmojiPicker &&
+                !(event.target as Element).closest('.emoji-picker') &&
+                !(event.target as Element).closest('.emoji-button')) {
+                setActiveEmojiPicker(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [activeEmojiPicker]);
+
     return (
         <FeedContainer>
             <Header>
@@ -241,7 +317,6 @@ const FeedClient = () => {
                         </AnnouncementIcon>
                         <AnnouncementText>여러분의 영업점 생활을 응원합니다:)</AnnouncementText>
                     </AnnouncementBox>
-
                     <PostsContainer>
                         {isLoading ? (
                             <LoadingContainer>
@@ -283,16 +358,44 @@ const FeedClient = () => {
                                                 <ReactionCount>{reaction.count}</ReactionCount>
                                             </ReactionBadge>
                                         ))}
-                                        <ReactionButton aria-label="반응 추가">
-                                            <MdAdd size={15} />
-                                        </ReactionButton>
+                                        <div style={{ position: 'relative' }}>
+                                            <ReactionButton
+                                                aria-label="반응 추가"
+                                                className="emoji-button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    toggleEmojiPicker(post.id, e);
+                                                }}
+                                            >
+                                                <MdAdd size={15} />
+                                            </ReactionButton>
+                                            {activeEmojiPicker === post.id && (
+                                                <EmojiPickerContainer
+                                                    className="emoji-picker"
+                                                    position={emojiPickerPosition}
+                                                >
+                                                    {emojiList.map((emojiData) => (
+                                                        <EmojiButton
+                                                            key={emojiData.emojiId}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleAddEmoji(post.id, emojiData.emojiId);
+                                                            }}
+                                                            aria-label={`이모지 ${emojiData.emoji} 추가`}
+                                                            title={emojiData.emoji}
+                                                        >
+                                                            {emojiData.emoji}
+                                                        </EmojiButton>
+                                                    ))}
+                                                </EmojiPickerContainer>
+                                            )}
+                                        </div>
                                     </ReactionContainer>
                                 </PostCard>
                             ))
                         )}
                     </PostsContainer>
                 </MainContent>
-
                 <FloatingButton
                     aria-label="글 작성하기"
                     onClick={() => setShowPostModal(true)}

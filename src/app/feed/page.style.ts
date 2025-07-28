@@ -382,6 +382,89 @@ export const ReactionBadge = styled.div`
     }
 `;
 
+export const EmojiPickerContainer = styled.div<{ position: 'top' | 'bottom' }>`
+    position: absolute;
+    ${props => props.position === 'top'
+            ? 'bottom: calc(100% + 15px);'
+            : 'top: calc(100% + 8px);'
+    }
+    right: -190;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    z-index: 100;
+    border: 1px solid ${colors.neutral[100]};
+    width: 220px;
+    transform-origin: bottom right;
+    animation: scaleIn 0.2s ease-out;
+
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        ${props => props.position === 'top'
+                ? 'bottom: -6px;'
+                : 'top: -6px;'
+        }
+        right: 195px;
+        width: 16px;
+        height: 16px;
+        background-color: white;
+        transform: rotate(45deg);
+        ${props => props.position === 'top'
+                ? `border-right: 1px solid ${colors.neutral[100]}; border-bottom: 1px solid ${colors.neutral[100]};`
+                : `border-left: 1px solid ${colors.neutral[100]}; border-top: 1px solid ${colors.neutral[100]};`
+        }
+    }
+`;
+export const EmojiButton = styled.button`
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: ${colors.neutral[50]};
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        background-color: ${colors.primary.light};
+        transform: scale(1.1);
+    }
+
+    &:active {
+        transform: scale(0.95);
+    }
+`;
+
+export const EmojiPickerTitle = styled.div`
+    grid-column: 1 / -1;
+    font-size: 14px;
+    font-weight: 500;
+    color: ${colors.neutral[700]};
+    margin-bottom: 8px;
+    text-align: left;
+    padding-bottom: 8px;
+    border-bottom: 1px solid ${colors.neutral[100]};
+`;
+
 export const EmojiIcon = styled.span`
     font-size: 0.75rem;
 `;
