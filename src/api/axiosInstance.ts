@@ -12,6 +12,12 @@ const api = axios.create({
 /* 요청 인터셉터 */
 api.interceptors.request.use(
     (config) => {
+        const accessToken = store.getState().auth.accessToken;
+
+        if (accessToken) {
+            config.headers.Authorization = `Bearer ${accessToken}`;
+        }
+
         return config;
     },
     error => Promise.reject(error)

@@ -436,3 +436,45 @@ export const FloatingButton = styled.button`
         transform: translateY(0) scale(0.98);
     }
 `;
+
+export const LoadingSpinner = styled.div`
+    display: inline-block;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 3px solid ${colors.neutral[200]};
+    border-radius: 50%;
+    border-top-color: ${colors.primary.main};
+    animation: spin 1s ease-in-out infinite;
+    margin: 2rem auto;
+    
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+`;
+
+export const LoadingContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 0;
+    text-align: center;
+`;
+
+export const EmptyStateText = styled.p`
+    color: ${colors.neutral[500]};
+    font-size: 1rem;
+    text-align: center;
+    padding: 2rem 0;
+    line-height: 1.5;
+`;
+
+export const ErrorText = styled.p`
+    color: ${colors.error};
+    font-size: 1rem;
+    text-align: center;
+    padding: 2rem 0;
+    line-height: 1.5;
+`;
