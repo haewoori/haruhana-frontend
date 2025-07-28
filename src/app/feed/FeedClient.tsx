@@ -20,9 +20,9 @@ import PostModal from '@/components/PostModal/PostModal';
 import { formatDate, formatGroupTitle, formatDateToString } from '@/utils/dateUtils';
 import { getCards } from '@/api/card/searchCardApi/searchCardClientApi';
 import { convertCardsToUIFormat } from '@/utils/cardUtils';
-import { addEmoji } from '@/api/card/addEmojiApi';
 import { getEmojiList } from '@/api/card/getEmojiListApi';
 import { EmojiData } from '@/api/card/getEmojiListApi/types';
+import { addEmoji } from '@/api/card/addEmojiApi';
 
 import {
     FeedContainer,
@@ -234,13 +234,13 @@ const FeedClient = () => {
             setError('이모지 추가 중 오류가 발생했습니다. 다시 시도해주세요.');
         } finally {
             setIsLoading(false);
-        }
+            }
     };
 
     // 이모지 선택기 토글 함수
     const toggleEmojiPicker = (postId: string, event?: React.MouseEvent) => {
         if (activeEmojiPicker === postId) {
-            setActiveEmojiPicker(null);
+                setActiveEmojiPicker(null);
         } else {
             if (event && event.currentTarget) {
                 setEmojiPickerPosition('top');
@@ -248,7 +248,7 @@ const FeedClient = () => {
 
             setActiveEmojiPicker(postId);
         }
-    };
+        };
 
     // 이모지 선택기 외부 클릭 감지
     useEffect(() => {
