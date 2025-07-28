@@ -57,10 +57,10 @@ export const colors = {
         800: '#1F2937',
         900: '#111827'
     },
-    success: '#10B981',
-    warning: '#F59E0B',
-    error: '#EF4444',
-    info: '#3B82F6'
+    success: '#4B5563',
+    warning: '#4B5563',
+    error: '#4B5563',
+    info: '#4B5563'
 };
 
 export const getCardAccentColor = (colorKey: string): string => {
@@ -591,4 +591,36 @@ export const ErrorText = styled.p`
     text-align: center;
     padding: 2rem 0;
     line-height: 1.5;
+`;
+
+export const ToastMessage = styled.div<{ type: 'success' | 'error' | 'info' }>`
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: ${props => {
+    switch (props.type) {
+        case 'success': return colors.success;
+        case 'error': return colors.error;
+        case 'info': return colors.primary.main;
+        default: return colors.neutral[800];
+    }
+}};
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: slideUp 0.3s ease-out forwards;
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 20px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
 `;

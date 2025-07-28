@@ -24,6 +24,8 @@ import { getEmojiList } from '@/api/card/getEmojiListApi';
 import { EmojiData } from '@/api/card/getEmojiListApi/types';
 import { addEmoji } from '@/api/card/addEmojiApi';
 import { deleteEmoji } from '@/api/card/deleteEmojiApi';
+import { useToast } from '@/hooks/useToast';
+import { ToastContainer } from '@/components/Toast';
 
 import {
     FeedContainer,
@@ -100,6 +102,7 @@ const FeedClient = () => {
     const [emojiPickerPosition, setEmojiPickerPosition] = useState<'top' | 'bottom'>('top');
     const [emojiList, setEmojiList] = useState<EmojiData[]>([]);
 
+    const { toasts, showToast, hideToast } = useToast();
     const calendarRef = useRef<HTMLDivElement>(null);
 
     // 인증 체크
@@ -236,39 +239,40 @@ const FeedClient = () => {
             setError('이모지 추가 중 오류가 발생했습니다. 다시 시도해주세요.');
         } finally {
             setIsLoading(false);
-            }
+        }
     };
 
     // 이모지 삭제 함수
     const handleDeleteEmoji = async (postId: string, emoji: string) => {
-      const emojiData = emojiList.find(item => item.emoji === emoji);
+        const emojiData = emojiList.find(item => item.emoji === emoji);
 
-      if (!emojiData) {
-        console.error('삭제할 이모지 데이터를 찾을 수 없습니다.');
-        return;
-      }
+        if (!emojiData) {
+            console.error('삭제할 이모지 데이터를 찾을 수 없습니다.');
+            return;
+        }
 
-      setIsLoading(true);
-      setError(null);
+        setIsLoading(true);
+        setError(null);
 
-      try {
-        await deleteEmoji(postId, emojiData.emojiId);
+        try {
+            await deleteEmoji(postId, emojiData.emojiId);
+            showToast('이모지가 삭제되었습니다.', 'success');
 
-        const response = await getCards(currentDate);
-        const formattedPosts = convertCardsToUIFormat(response);
-        setPosts(formattedPosts);
-      } catch (err) {
-        console.error('이모지 삭제 중 오류가 발생했습니다:', err);
-        setError('이모지 삭제 중 오류가 발생했습니다. 다시 시도해주세요.');
-      } finally {
-        setIsLoading(false);
-      }
+            const response = await getCards(currentDate);
+            const formattedPosts = convertCardsToUIFormat(response);
+            setPosts(formattedPosts);
+        } catch (err) {
+            console.error('이모지 삭제 중 오류가 발생했습니다:', err);
+            showToast('이모지 삭제 중 오류가 발생했습니다.', 'error');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // 이모지 선택기 토글 함수
     const toggleEmojiPicker = (postId: string, event?: React.MouseEvent) => {
         if (activeEmojiPicker === postId) {
-                setActiveEmojiPicker(null);
+            setActiveEmojiPicker(null);
         } else {
             if (event && event.currentTarget) {
                 setEmojiPickerPosition('top');
@@ -276,7 +280,7 @@ const FeedClient = () => {
 
             setActiveEmojiPicker(postId);
         }
-        };
+    };
 
     // 이모지 선택기 외부 클릭 감지
     useEffect(() => {
@@ -384,16 +388,16 @@ const FeedClient = () => {
                                             <ReactionBadge
                                                 key={index}
                                                 isMine={reaction.isMine}
-                                            title={reaction.isMine ? "클릭하여 이모지 삭제" : ""}
-                                            onClick={() => {
-                                              if (reaction.isMine) {
-                                                  handleDeleteEmoji(post.id, reaction.emoji);
-                                              }
-                                            }}
-                                          >
-                                            <EmojiIcon>{reaction.emoji}</EmojiIcon>
-                                            <ReactionCount>{reaction.count}</ReactionCount>
-                                          </ReactionBadge>
+                                                title={reaction.isMine ? "클릭하여 이모지 삭제" : ""}
+                                                onClick={() => {
+                                                    if (reaction.isMine) {
+                                                        handleDeleteEmoji(post.id, reaction.emoji);
+                                                    }
+                                                }}
+                                            >
+                                                <EmojiIcon>{reaction.emoji}</EmojiIcon>
+                                                <ReactionCount>{reaction.count}</ReactionCount>
+                                            </ReactionBadge>
                                         ))}
                                         <div style={{ position: 'relative' }}>
                                             <ReactionButton
@@ -446,6 +450,8 @@ const FeedClient = () => {
                 onClose={() => setShowPostModal(false)}
                 onSave={handleSavePost}
             />
+
+            <ToastContainer toasts={toasts} onClose={hideToast} />
         </FeedContainer>
     )
 }
