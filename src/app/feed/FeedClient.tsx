@@ -77,6 +77,7 @@ interface Post {
     reactions?: {
         emoji: string;
         count: number;
+        isMine: boolean;
     }[];
     isMyCard?: boolean;
     createdAt?: string;
@@ -353,7 +354,11 @@ const FeedClient = () => {
                                     <PostContent>{post.content}</PostContent>
                                     <ReactionContainer>
                                         {post.reactions?.map((reaction, index) => (
-                                            <ReactionBadge key={index}>
+                                            <ReactionBadge
+                                                key={index}
+                                                isMine={reaction.isMine}
+                                                title={reaction.isMine ? "내가 추가한 이모지" : ""}
+                                            >
                                                 <EmojiIcon>{reaction.emoji}</EmojiIcon>
                                                 <ReactionCount>{reaction.count}</ReactionCount>
                                             </ReactionBadge>

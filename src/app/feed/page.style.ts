@@ -365,20 +365,31 @@ export const ReactionContainer = styled.div`
     padding-top: 1rem;
 `;
 
-export const ReactionBadge = styled.div`
+export const ReactionBadge = styled.div<{ isMine?: boolean }>`
     display: flex;
     align-items: center;
-    background-color: ${colors.neutral[100]};
-    color: ${colors.neutral[700]};
+    background-color: ${props => props.isMine
+            ? colors.primary.light
+            : colors.neutral[100]};
+    color: ${props => props.isMine
+            ? colors.primary.main
+            : colors.neutral[700]};
     border-radius: 9999px;
     padding: 0.375rem 0.875rem;
     transition: all 0.15s;
-    border: 1px solid ${colors.neutral[200]};
+    border: 1px solid ${props => props.isMine
+            ? colors.primary.main
+            : colors.neutral[200]};
+    position: relative;
 
     &:hover {
         transform: scale(1.05);
-        background-color: ${colors.primary.light};
-        border-color: ${colors.primary.light};
+        background-color: ${props => props.isMine
+                ? `${colors.primary.light}`
+                : colors.primary.light};
+        border-color: ${props => props.isMine
+                ? colors.primary.main
+                : colors.primary.light};
     }
 `;
 

@@ -1,5 +1,22 @@
-import { Card } from '@/api/card/searchCardApi/types';
+import { Card, GetCardsResponse } from '@/api/card/searchCardApi/types';
 import { cardColorOptions } from '@/app/feed/page.style';
+
+interface UIPost {
+    id: string;
+    author: {
+        name: string;
+        profileImage: string;
+    };
+    content: string;
+    color: string;
+    reactions?: {
+        emoji: string;
+        count: number;
+        isMine: boolean;
+    }[];
+    isMyCard?: boolean;
+    createdAt?: string;
+}
 
 /**
  * API에서 받아온 카드 데이터를 UI에서 사용하는 형식으로 변환
@@ -49,14 +66,61 @@ export const getRandomCardColor = (): string => {
  * @param response - API 응답 데이터
  * @returns UI에서 사용할 수 있는 형식의 카드 목록
  */
-export const convertCardsToUIFormat = (response: { myCards: Card[], otherCards: Card[] }) => {
-    const myCards = response.myCards.map(card => convertCardToUIFormat(card, true));
-    const otherCards = response.otherCards.map(card => convertCardToUIFormat(card, false));
+export const convertCardsToUIFormat = (response: GetCardsResponse): UIPost[] => {
+    const myCards = response.myCards.map(card => ({
+        id: card.cardId,
+        author: {
+            name: card.userProfile.username,
+            profileImage: card.userProfile.profileImageUrl
+        },
+        content: card.content,
+        color: card.bgColor || getRandomCardColor(),
+        reactions: processEmojiRecords(card.emojiRecords),
+        isMyCard: true,
+        createdAt: card.createdAt
+    }));
 
-    // 생성일 기준으로 최신순 정렬
+    const otherCards = response.otherCards.map(card => ({
+        id: card.cardId,
+        author: {
+            name: card.userProfile.username,
+            profileImage: card.userProfile.profileImageUrl
+        },
+        content: card.content,
+        color: card.bgColor || getRandomCardColor(),
+        reactions: processEmojiRecords(card.emojiRecords),
+        isMyCard: false,
+        createdAt: card.createdAt
+    }));
+
+    // 최신순 정렬
     return [...myCards, ...otherCards].sort((a, b) => {
-        const dateA = new Date(a.createdAt);
-        const dateB = new Date(b.createdAt);
-        return dateB.getTime() - dateA.getTime();
+        if (a.createdAt && b.createdAt) {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+        return 0;
     });
+};
+
+// 이모지 레코드를 UI 형식으로 처리하는 함수
+const processEmojiRecords = (emojiRecords: Card['emojiRecords']) => {
+    const emojiCounts: Record<string, { count: number, isMine: boolean }> = {};
+
+    // 내가 추가한 이모지 여부 확인
+    emojiRecords.forEach(record => {
+        if (!emojiCounts[record.image]) {
+            emojiCounts[record.image] = { count: 0, isMine: false };
+        }
+        emojiCounts[record.image].count += 1;
+
+        if (record.isMine) {
+            emojiCounts[record.image].isMine = true;
+        }
+    });
+
+    return Object.entries(emojiCounts).map(([emoji, data]) => ({
+        emoji,
+        count: data.count,
+        isMine: data.isMine
+    }));
 };
