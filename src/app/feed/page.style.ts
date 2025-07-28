@@ -296,7 +296,7 @@ export const CloseButton = styled.button`
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
-    z-index: 1;
+    z-index: 5;
 
     &:hover {
         background-color: ${colors.neutral[200]};
