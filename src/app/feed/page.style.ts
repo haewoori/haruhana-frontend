@@ -57,10 +57,10 @@ export const colors = {
         800: '#1F2937',
         900: '#111827'
     },
-    success: '#10B981',
-    warning: '#F59E0B',
-    error: '#EF4444',
-    info: '#3B82F6'
+    success: '#4B5563',
+    warning: '#4B5563',
+    error: '#4B5563',
+    info: '#4B5563'
 };
 
 export const getCardAccentColor = (colorKey: string): string => {
@@ -365,21 +365,135 @@ export const ReactionContainer = styled.div`
     padding-top: 1rem;
 `;
 
-export const ReactionBadge = styled.div`
+export const ReactionBadge = styled.div<{ isMine?: boolean }>`
     display: flex;
     align-items: center;
-    background-color: ${colors.neutral[100]};
-    color: ${colors.neutral[700]};
+    background-color: ${props => props.isMine
+            ? colors.primary.light
+            : colors.neutral[100]};
+    color: ${props => props.isMine
+            ? colors.primary.main
+            : colors.neutral[700]};
     border-radius: 9999px;
     padding: 0.375rem 0.875rem;
     transition: all 0.15s;
-    border: 1px solid ${colors.neutral[200]};
+    border: 1px solid ${props => props.isMine
+            ? colors.primary.main
+            : colors.neutral[200]};
+    position: relative;
+    cursor: ${props => props.isMine ? 'pointer' : 'default'};
 
     &:hover {
-        transform: scale(1.05);
-        background-color: ${colors.primary.light};
-        border-color: ${colors.primary.light};
+        transform: ${props => props.isMine ? 'scale(1.05)' : 'none'};
+        background-color: ${props => props.isMine
+                ? `${colors.primary.light}`
+                : colors.neutral[100]};
+        border-color: ${props => props.isMine
+                ? colors.primary.main
+                : colors.neutral[200]};
     }
+
+    ${props => props.isMine && `
+        &:hover::before {
+            content: '✕';
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: ${colors.error};
+            color: white;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    `}
+`;
+
+export const EmojiPickerContainer = styled.div<{ position: 'top' | 'bottom' }>`
+    position: absolute;
+    ${props => props.position === 'top'
+            ? 'bottom: calc(100% + 15px);'
+            : 'top: calc(100% + 8px);'
+    }
+    right: -190;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    z-index: 100;
+    border: 1px solid ${colors.neutral[100]};
+    width: 220px;
+    transform-origin: bottom right;
+    animation: scaleIn 0.2s ease-out;
+
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        ${props => props.position === 'top'
+                ? 'bottom: -6px;'
+                : 'top: -6px;'
+        }
+        right: 195px;
+        width: 16px;
+        height: 16px;
+        background-color: white;
+        transform: rotate(45deg);
+        ${props => props.position === 'top'
+                ? `border-right: 1px solid ${colors.neutral[100]}; border-bottom: 1px solid ${colors.neutral[100]};`
+                : `border-left: 1px solid ${colors.neutral[100]}; border-top: 1px solid ${colors.neutral[100]};`
+        }
+    }
+`;
+export const EmojiButton = styled.button`
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: ${colors.neutral[50]};
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        background-color: ${colors.primary.light};
+        transform: scale(1.1);
+    }
+
+    &:active {
+        transform: scale(0.95);
+    }
+`;
+
+export const EmojiPickerTitle = styled.div`
+    grid-column: 1 / -1;
+    font-size: 14px;
+    font-weight: 500;
+    color: ${colors.neutral[700]};
+    margin-bottom: 8px;
+    text-align: left;
+    padding-bottom: 8px;
+    border-bottom: 1px solid ${colors.neutral[100]};
 `;
 
 export const EmojiIcon = styled.span`
@@ -477,4 +591,36 @@ export const ErrorText = styled.p`
     text-align: center;
     padding: 2rem 0;
     line-height: 1.5;
+`;
+
+export const ToastMessage = styled.div<{ type: 'success' | 'error' | 'info' }>`
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: ${props => {
+    switch (props.type) {
+        case 'success': return colors.success;
+        case 'error': return colors.error;
+        case 'info': return colors.primary.main;
+        default: return colors.neutral[800];
+    }
+}};
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: slideUp 0.3s ease-out forwards;
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 20px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
 `;

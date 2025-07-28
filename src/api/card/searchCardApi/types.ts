@@ -7,6 +7,7 @@ export interface EmojiRecord {
     emojiId: string;
     image: string;
     userId: string;
+    isMine: boolean;
 }
 
 export interface Card {
