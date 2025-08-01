@@ -107,6 +107,16 @@ const FeedClient = () => {
     const { toasts, showToast, hideToast } = useToast();
     const calendarRef = useRef<HTMLDivElement>(null);
 
+    // 공지사항 박스 렌더링 함수
+    const renderAnnouncementBox = (message: string) => (
+        <AnnouncementBox>
+            <AnnouncementIcon>
+                <MdCampaign size={20} />
+            </AnnouncementIcon>
+            <AnnouncementText>{message}</AnnouncementText>
+        </AnnouncementBox>
+    );
+
     // 이모지 처리 헬퍼 함수
     const handleExistingEmoji = useCallback((
         reactions: Post['reactions'] = [],
@@ -459,21 +469,7 @@ const FeedClient = () => {
                         <GradientText>함께 성장해요⚡️</GradientText>
                     </HeaderContainer>
 
-                    {notification ? (
-                        <AnnouncementBox>
-                            <AnnouncementIcon>
-                                <MdCampaign size={20} />
-                            </AnnouncementIcon>
-                            <AnnouncementText>{notification}</AnnouncementText>
-                        </AnnouncementBox>
-                    ) : (
-                        <AnnouncementBox>
-                            <AnnouncementIcon>
-                                <MdCampaign size={20} />
-                            </AnnouncementIcon>
-                            <AnnouncementText>여러분의 영업점 생활을 응원합니다 :)</AnnouncementText>
-                        </AnnouncementBox>
-                    )}
+                    {renderAnnouncementBox(notification || "여러분의 영업점 생활을 응원합니다 :)")}
 
                     <PostsContainer>
                         {isLoading ? (
