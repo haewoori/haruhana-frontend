@@ -26,6 +26,7 @@ import { addEmoji } from '@/api/card/addEmojiApi';
 import { deleteEmoji } from '@/api/card/deleteEmojiApi';
 import { useToast } from '@/hooks/useToast';
 import { ToastContainer } from '@/components/Toast';
+import { getNotifications } from '@/api/notification/getNotificationsApi';
 
 import {
     FeedContainer,
@@ -101,6 +102,7 @@ const FeedClient = () => {
     const [activeEmojiPicker, setActiveEmojiPicker] = useState<string | null>(null);
     const [emojiPickerPosition, setEmojiPickerPosition] = useState<'top' | 'bottom'>('top');
     const [emojiList, setEmojiList] = useState<EmojiData[]>([]);
+    const [notification, setNotification] = useState<string | null>(null);
 
     const { toasts, showToast, hideToast } = useToast();
     const calendarRef = useRef<HTMLDivElement>(null);
@@ -168,6 +170,21 @@ const FeedClient = () => {
             router.push('/');
         }
     }, [isAuthenticated, accessToken, router]);
+
+    // 컴포넌트 마운트 시 공지사항 로드
+    useEffect(() => {
+        const fetchNotification = async () => {
+            try {
+                const response = await getNotifications();
+                setNotification(response.message);
+            } catch (err) {
+                console.error('공지사항을 불러오는 중 오류가 발생했습니다:', err);
+                setNotification(null);
+            }
+        };
+
+        fetchNotification();
+    }, []);
 
     // 컴포넌트 마운트 시 이모지 리스트 로드
     useEffect(() => {
@@ -442,12 +459,22 @@ const FeedClient = () => {
                         <GradientText>함께 성장해요⚡️</GradientText>
                     </HeaderContainer>
 
-                    <AnnouncementBox>
-                        <AnnouncementIcon>
-                            <MdCampaign size={20} />
-                        </AnnouncementIcon>
-                        <AnnouncementText>여러분의 영업점 생활을 응원합니다:)</AnnouncementText>
-                    </AnnouncementBox>
+                    {notification ? (
+                        <AnnouncementBox>
+                            <AnnouncementIcon>
+                                <MdCampaign size={20} />
+                            </AnnouncementIcon>
+                            <AnnouncementText>{notification}</AnnouncementText>
+                        </AnnouncementBox>
+                    ) : (
+                        <AnnouncementBox>
+                            <AnnouncementIcon>
+                                <MdCampaign size={20} />
+                            </AnnouncementIcon>
+                            <AnnouncementText>여러분의 영업점 생활을 응원합니다 :)</AnnouncementText>
+                        </AnnouncementBox>
+                    )}
+
                     <PostsContainer>
                         {isLoading ? (
                             <LoadingContainer>
