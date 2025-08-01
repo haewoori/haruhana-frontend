@@ -455,7 +455,7 @@ const FeedClient = () => {
             <FeedContentWrapper>
                 <MainContent>
                     <HeaderContainer>
-                        <GroupTitle>{formatGroupTitle(currentDate)}</GroupTitle>
+                        <GroupTitle>우리은행 25년도 7월 행번</GroupTitle>
                         <GradientText>함께 성장해요⚡️</GradientText>
                     </HeaderContainer>
 
@@ -505,7 +505,7 @@ const FeedClient = () => {
                                         />
                                         <UserInfo>
                                             <UserName>{post.author.name}</UserName>
-                                            <UserGroup>{formatGroupTitle(currentDate)}</UserGroup>
+                                            <UserGroup>우리은행 25년도 7월 행번</UserGroup>
                                         </UserInfo>
                                     </ProfileSection>
                                     <PostContent>{post.content}</PostContent>
