@@ -27,20 +27,16 @@ import Calendar from '@/components/Calendar/Calendar';
 import StudyModal from './StudyModal';
 import { formatDate } from '@/utils/dateUtils';
 
+// 공통 컴포넌트 import
+import Header from '@/components/Header/Header';
+import PageHeader from '@/components/PageHeader/PageHeader';
+import AnnouncementBox from '@/components/AnnouncementBox/AnnouncementBox';
+import FloatingButton from '@/components/FloatingButton/FloatingButton';
+
 import {
     StudyContainer,
-    Header,
-    HeaderContent,
-    DateNavigation,
-    DateButton,
-    DateText,
     StudyContentWrapper,
     MainContent,
-    HeaderContainer,
-    GroupTitle,
-    GradientText,
-    AnnouncementBox,
-    AnnouncementText,
     StudyListContainer,
     StudyCard,
     CardHeader,
@@ -56,28 +52,19 @@ import {
     UserName,
     StudyTitle,
     StudyInfoContainer,
-    StudyInfoItem,
-    StudyInfoLabel,
-    StudyInfoValue,
     MemberCount,
     MemberCountValue,
     Deadline,
     DeadlineValue,
-    AnnouncementIcon,
     LoadingContainer,
     LoadingSpinner,
     EmptyStateText,
     ErrorText,
-    FloatingButton,
+    colors,
     StatusIndicator,
     ApplyBadge,
     CardActions,
-    ViewDetailsButton,
-    FilterContainer,
-    FilterButton,
-    FilterBadge,
-    FilterDivider,
-    ClearFiltersButton
+    ViewDetailsButton
 } from './page.style';
 
 interface Member {
@@ -190,33 +177,17 @@ const StudyClient = () => {
     const router = useRouter();
     const { accessToken, isAuthenticated } = useSelector((state: any) => state.auth);
 
-    const [leftArrowHovered, setLeftArrowHovered] = useState(false);
-    const [rightArrowHovered, setRightArrowHovered] = useState(false);
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [showCalendar, setShowCalendar] = useState(false);
     const [studies, setStudies] = useState<Study[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [selectedStudy, setSelectedStudy] = useState<Study | null>(null);
     const [showStudyModal, setShowStudyModal] = useState(false);
-    const [notification, setNotification] = useState<string | null>("다양한 스터디에 참여하고 함께 성장해보세요!");
-
-    const [filters, setFilters] = useState<StudyFilters>({
-        status: 'all'
-    });
+    const [notification, setNotification] = useState<string | null>("스터디에 참여하고 함께 성장해요!");
 
     const { toasts, showToast, hideToast } = useToast();
-    const calendarRef = useRef<HTMLDivElement>(null);
 
-    const renderAnnouncementBox = (message: string) => (
-        <AnnouncementBox>
-            <AnnouncementIcon>
-                <MdCampaign size={20} />
-            </AnnouncementIcon>
-            <AnnouncementText>{message}</AnnouncementText>
-        </AnnouncementBox>
-    );
-
+    // 인증 체크
     useEffect(() => {
         if (!accessToken) {
             router.push('/');
@@ -249,116 +220,6 @@ const StudyClient = () => {
 
         fetchStudies();
     }, []);
-
-    // 날짜 변경 함수
-    const changeDate = useCallback((days: number) => {
-        const newDate = new Date(currentDate);
-        newDate.setDate(newDate.getDate() + days);
-        setCurrentDate(newDate);
-    }, [currentDate]);
-
-    // 캘린더에서 날짜 선택 함수
-    const selectDate = useCallback((date: Date) => {
-        setCurrentDate(date);
-        setShowCalendar(false);
-    }, []);
-
-    // 캘린더 외부 클릭 감지
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
-                setShowCalendar(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
-
-    // 필터링된 스터디 목록을 가져오는 함수
-    const getFilteredStudies = useCallback(() => {
-        if (filters.status === 'all') {
-            return studies;
-        }
-
-        return studies.filter(study => study.status === filters.status);
-    }, [studies, filters]);
-
-    // 필터 버튼 클릭 핸들러
-    const handleFilterChange = useCallback((status: StudyStatus) => {
-        setFilters(prev => ({
-            ...prev,
-            status: status
-        }));
-    }, []);
-
-    // 필터 초기화 핸들러
-    const clearFilters = useCallback(() => {
-        setFilters({
-            status: 'all'
-        });
-    }, []);
-
-    // 각 상태별 스터디 개수 계산
-    const getStudyCountByStatus = useCallback((status: StudyStatus): number => {
-        if (status === 'all') {
-            return studies.length;
-        }
-        return studies.filter(study => study.status === status).length;
-    }, [studies]);
-
-    // 필터 렌더링 함수
-    const renderFilters = () => (
-        <FilterContainer>
-            <FilterButton
-                active={filters.status === 'all'}
-                onClick={() => handleFilterChange('all')}
-            >
-                <MdFilterList size={16} />
-                전체
-                <FilterBadge>{getStudyCountByStatus('all')}</FilterBadge>
-            </FilterButton>
-
-            <FilterButton
-                active={filters.status === 'recruiting'}
-                onClick={() => handleFilterChange('recruiting')}
-            >
-                <MdAccessTime size={16} />
-                모집 중
-                <FilterBadge>{getStudyCountByStatus('recruiting')}</FilterBadge>
-            </FilterButton>
-
-            <FilterButton
-                active={filters.status === 'completed'}
-                onClick={() => handleFilterChange('completed')}
-            >
-                <MdCheck size={16} />
-                모집 완료
-                <FilterBadge>{getStudyCountByStatus('completed')}</FilterBadge>
-            </FilterButton>
-
-            <FilterButton
-                active={filters.status === 'canceled'}
-                onClick={() => handleFilterChange('canceled')}
-            >
-                <MdClose size={16} />
-                모집 취소
-                <FilterBadge>{getStudyCountByStatus('canceled')}</FilterBadge>
-            </FilterButton>
-
-            {filters.status !== 'all' && (
-                <>
-                    <FilterDivider />
-                    <ClearFiltersButton onClick={clearFilters}>
-                        <MdClear size={16} />
-                        필터 초기화
-                    </ClearFiltersButton>
-                </>
-            )}
-        </FilterContainer>
-    );
 
     // 스터디 신청 함수
     const handleApplyStudy = useCallback((studyId: string) => {
@@ -409,53 +270,23 @@ const StudyClient = () => {
 
     return (
         <StudyContainer>
-            <Header>
-                <HeaderContent>
-                    <DateNavigation>
-                        <DateButton
-                            isHovered={leftArrowHovered}
-                            onMouseEnter={() => setLeftArrowHovered(true)}
-                            onMouseLeave={() => setLeftArrowHovered(false)}
-                            onClick={() => changeDate(-1)}
-                            aria-label="이전 날짜"
-                        >
-                            <IoIosArrowBack size={18} />
-                        </DateButton>
-                        <DateText onClick={() => setShowCalendar(!showCalendar)}>
-                            {formatDate(currentDate)}
-                        </DateText>
-                        <DateButton
-                            isHovered={rightArrowHovered}
-                            onMouseEnter={() => setRightArrowHovered(true)}
-                            onMouseLeave={() => setRightArrowHovered(false)}
-                            onClick={() => changeDate(1)}
-                            aria-label="다음 날짜"
-                        >
-                            <IoIosArrowForward size={18} />
-                        </DateButton>
-                    </DateNavigation>
-
-                    {showCalendar && (
-                        <Calendar
-                            selectedDate={currentDate}
-                            onDateSelect={selectDate}
-                            containerRef={calendarRef}
-                        />
-                    )}
-                </HeaderContent>
-            </Header>
-
+            <Header
+                currentDate={currentDate}
+                setCurrentDate={setCurrentDate}
+                colors={colors}
+            />
             <StudyContentWrapper>
                 <MainContent>
-                    <HeaderContainer>
-                        <GroupTitle>우리은행 25년도 7월 행번</GroupTitle>
-                        <GradientText>함께 공부해요⚡️</GradientText>
-                    </HeaderContainer>
+                    <PageHeader
+                        groupTitle="우리은행 25년도 7월 행번"
+                        gradientText="함께 성장해요⚡️"
+                        colors={colors}
+                    />
 
-                    {renderAnnouncementBox(notification || "다양한 스터디에 참여하고 함께 성장해보세요!")}
-
-                    {/* 필터 UI 추가 */}
-                    {!isLoading && !error && studies.length > 0 && renderFilters()}
+                    <AnnouncementBox
+                        message={notification || "스터디에 참여하고 함께 성장해요!"}
+                        colors={colors}
+                    />
 
                     <StudyListContainer>
                         {isLoading ? (
@@ -469,12 +300,8 @@ const StudyClient = () => {
                             <EmptyStateText>
                                 현재 진행 중인 스터디가 없습니다. 첫 번째 스터디를 만들어보세요!
                             </EmptyStateText>
-                        ) : getFilteredStudies().length === 0 ? (
-                            <EmptyStateText>
-                                선택한 필터에 해당하는 스터디가 없습니다. 다른 필터를 선택해보세요.
-                            </EmptyStateText>
                         ) : (
-                            getFilteredStudies().map(study => (
+                            studies.map(study => (
                                 <StudyCard key={study.id}>
                                     <CardHeader>
                                         <TagsContainer>
@@ -561,12 +388,13 @@ const StudyClient = () => {
                         )}
                     </StudyListContainer>
                 </MainContent>
+
                 <FloatingButton
-                    aria-label="스터디 생성하기"
                     onClick={handleCreateStudy}
-                >
-                    <MdEdit size={28} />
-                </FloatingButton>
+                    icon={<MdEdit size={28} />}
+                    ariaLabel="스터디 생성하기"
+                    colors={colors}
+                />
             </StudyContentWrapper>
 
             <StudyModal
