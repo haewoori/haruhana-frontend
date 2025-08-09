@@ -206,7 +206,7 @@ const StudyClient = () => {
     const [error, setError] = useState<string | null>(null);
     const [selectedStudy, setSelectedStudy] = useState<Study | null>(null);
     const [showStudyModal, setShowStudyModal] = useState(false);
-    const [notification, setNotification] = useState<string | null>("스터디에 참여하고 함께 성장해요!");
+    const [notification, setNotification] = useState<string | null>("여러분의 영업점 생활을 응원합니다 :)");
     const [showCreateModal, setShowCreateModal] = useState(false);
 
     const [filters, setFilters] = useState<StudyFilters>({
@@ -462,7 +462,7 @@ const StudyClient = () => {
                     />
 
                     <AnnouncementBox
-                        message={notification || "스터디에 참여하고 함께 성장해요!"}
+                        message={notification || "여러분의 영업점 생활을 응원합니다 :)"}
                         colors={colors}
                     />
 

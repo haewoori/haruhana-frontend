@@ -29,6 +29,7 @@ import {
   InputContainer,
   MessageContainer
 } from './StudyCreateModal.style';
+import DatePicker from '@/components/DatePicker/DatePicker';
 
 interface StudyCreateModalProps {
   isOpen: boolean;
@@ -264,7 +265,7 @@ const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) =>
       <ModalOverlay>
         <ModalContainer ref={modalRef}>
           <ModalHeader>
-            <ModalTitle>스터디 모집하기</ModalTitle>
+            <ModalTitle>모집하기</ModalTitle>
             <CloseButton onClick={handleCancel}>
               <MdClose size={20} />
             </CloseButton>
@@ -348,28 +349,30 @@ const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) =>
             <FormRow>
               <RowFormGroup>
                 <FormLabel htmlFor="startDate">모집 시작일</FormLabel>
-                <DateInput
+                <DatePicker
                     id="startDate"
                     name="startDate"
-                    type="date"
                     value={formData.startDate}
                     onChange={handleChange}
                     min={getMinDate()}
                     hasError={!!errors.startDate && touched.startDate}
+                    placeholder="시작일 선택"
+                    calendarSize="small"
                 />
                 {touched.startDate && errors.startDate && <ErrorMessage>{errors.startDate}</ErrorMessage>}
               </RowFormGroup>
 
               <RowFormGroup>
                 <FormLabel htmlFor="deadline">모집 마감일</FormLabel>
-                <DateInput
+                <DatePicker
                     id="deadline"
                     name="deadline"
-                    type="date"
                     value={formData.deadline}
                     onChange={handleChange}
                     min={formData.startDate || getMinDate()}
                     hasError={!!errors.deadline && touched.deadline}
+                    placeholder="마감일 선택"
+                    calendarSize="small"
                 />
                 {touched.deadline && errors.deadline && <ErrorMessage>{errors.deadline}</ErrorMessage>}
               </RowFormGroup>

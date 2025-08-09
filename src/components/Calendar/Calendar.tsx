@@ -13,13 +13,21 @@ import {
 
 const DAYS_OF_WEEK = ['일', '월', '화', '수', '목', '금', '토'];
 
+export type CalendarSize = 'regular' | 'small';
+
 interface CalendarProps {
     selectedDate: Date;
     onDateSelect: (date: Date) => void;
     containerRef: React.RefObject<HTMLDivElement>;
+    size?: CalendarSize;
 }
 
-const Calendar = ({ selectedDate, onDateSelect, containerRef }: CalendarProps) => {
+const Calendar = ({
+                      selectedDate,
+                      onDateSelect,
+                      containerRef,
+                      size = 'regular'
+                  }: CalendarProps) => {
     const [calendarMonth, setCalendarMonth] = useState(selectedDate.getMonth());
     const [calendarYear, setCalendarYear] = useState(selectedDate.getFullYear());
     const [calendarDays, setCalendarDays] = useState<Array<{date: Date, isCurrentMonth: boolean}>>([]);
@@ -68,8 +76,8 @@ const Calendar = ({ selectedDate, onDateSelect, containerRef }: CalendarProps) =
     };
 
     return (
-        <DatePickerContainer ref={containerRef}>
-            <CalendarWrapper>
+        <DatePickerContainer ref={containerRef} size={size}>
+            <CalendarWrapper size={size}>
                 <CalendarHeader>
                     <DateButton
                         isHovered={false}
@@ -77,10 +85,11 @@ const Calendar = ({ selectedDate, onDateSelect, containerRef }: CalendarProps) =
                         onMouseLeave={() => {}}
                         onClick={() => changeCalendarMonth(-1)}
                         aria-label="이전 달"
+                        size={size}
                     >
-                        <IoIosArrowBack size={16} />
+                        <IoIosArrowBack size={size === 'small' ? 10 : 16} />
                     </DateButton>
-                    <CalendarTitle>
+                    <CalendarTitle size={size}>
                         {calendarYear}년 {calendarMonth + 1}월
                     </CalendarTitle>
                     <DateButton
@@ -89,14 +98,15 @@ const Calendar = ({ selectedDate, onDateSelect, containerRef }: CalendarProps) =
                         onMouseLeave={() => {}}
                         onClick={() => changeCalendarMonth(1)}
                         aria-label="다음 달"
+                        size={size}
                     >
-                        <IoIosArrowForward size={16} />
+                        <IoIosArrowForward size={size === 'small' ? 10 : 16} />
                     </DateButton>
                 </CalendarHeader>
 
-                <CalendarGrid>
+                <CalendarGrid size={size}>
                     {DAYS_OF_WEEK.map(day => (
-                        <CalendarDayHeader key={day}>{day}</CalendarDayHeader>
+                        <CalendarDayHeader key={day} size={size}>{day}</CalendarDayHeader>
                     ))}
 
                     {calendarDays.map((day, index) => {
@@ -117,6 +127,7 @@ const Calendar = ({ selectedDate, onDateSelect, containerRef }: CalendarProps) =
                                 isSelected={isSelected}
                                 isToday={isToday}
                                 onClick={() => onDateSelect(day.date)}
+                                size={size}
                             >
                                 {day.date.getDate()}
                             </CalendarDay>
