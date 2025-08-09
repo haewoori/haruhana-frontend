@@ -1,24 +1,16 @@
 'use client';
 
 import { createCard } from '@/api/card/createCardApi';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
-import {
-    IoIosArrowBack,
-    IoIosArrowForward,
-} from 'react-icons/io';
-import {
-    MdCampaign,
-    MdClose,
-    MdAdd,
-    MdEdit
-} from 'react-icons/md';
+import { MdAdd, MdEdit, MdClose } from 'react-icons/md';
 
-import Calendar from '@/components/Calendar/Calendar';
+import Header from '@/components/Header/Header';
+import PageHeader from '@/components/PageHeader/PageHeader';
+import AnnouncementBox from '@/components/AnnouncementBox/AnnouncementBox';
+import FloatingButton from '@/components/FloatingButton/FloatingButton';
 import PostModal from '@/components/PostModal/PostModal';
-import { formatDate, formatGroupTitle, formatDateToString } from '@/utils/dateUtils';
-import { getCards } from '@/api/card/searchCardApi/searchCardClientApi';
 import { convertCardsToUIFormat } from '@/utils/cardUtils';
 import { getEmojiList } from '@/api/card/getEmojiListApi';
 import { EmojiData } from '@/api/card/getEmojiListApi/types';
@@ -27,27 +19,18 @@ import { deleteEmoji } from '@/api/card/deleteEmojiApi';
 import { useToast } from '@/hooks/useToast';
 import { ToastContainer } from '@/components/Toast';
 import { getNotifications } from '@/api/notification/getNotificationsApi';
+import { getCards } from '@/api/card/searchCardApi/searchCardClientApi';
+import { deleteCard } from "@/api/card/deleteCardApi";
 
 import {
     FeedContainer,
     FeedContentWrapper,
-    Header,
-    HeaderContent,
-    DateNavigation,
-    DateButton,
-    DateText,
     MainContent,
-    HeaderContainer,
-    GroupTitle,
-    GradientText,
-    AnnouncementBox,
-    AnnouncementText,
     PostsContainer,
     PostCard,
     CloseButton,
     ProfileSection,
     ProfileImage,
-    ProfileImageWithBorder,
     UserInfo,
     UserName,
     UserGroup,
@@ -57,19 +40,14 @@ import {
     EmojiIcon,
     ReactionCount,
     ReactionButton,
-    FloatingButton,
-    AnnouncementIcon,
-    cardColorOptions,
+    EmojiPickerContainer,
+    EmojiButton,
     LoadingContainer,
     LoadingSpinner,
     EmptyStateText,
     ErrorText,
-    EmojiPickerContainer,
-    EmojiButton,
-    EmojiPickerTitle
+    colors
 } from "./page.style";
-import {deleteCard} from "@/api/card/deleteCardApi";
-
 interface Post {
     id: string;
     author: {
@@ -91,10 +69,7 @@ const FeedClient = () => {
     const router = useRouter();
     const { accessToken, isAuthenticated } = useSelector((state: any) => state.auth);
 
-    const [leftArrowHovered, setLeftArrowHovered] = useState(false);
-    const [rightArrowHovered, setRightArrowHovered] = useState(false);
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [showCalendar, setShowCalendar] = useState(false);
     const [showPostModal, setShowPostModal] = useState(false);
     const [posts, setPosts] = useState<Post[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -105,73 +80,6 @@ const FeedClient = () => {
     const [notification, setNotification] = useState<string | null>(null);
 
     const { toasts, showToast, hideToast } = useToast();
-    const calendarRef = useRef<HTMLDivElement>(null);
-
-    // 공지사항 박스 렌더링 함수
-    const renderAnnouncementBox = (message: string) => (
-        <AnnouncementBox>
-            <AnnouncementIcon>
-                <MdCampaign size={20} />
-            </AnnouncementIcon>
-            <AnnouncementText>{message}</AnnouncementText>
-        </AnnouncementBox>
-    );
-
-    // 이모지 처리 헬퍼 함수
-    const handleExistingEmoji = useCallback((
-        reactions: Post['reactions'] = [],
-        myExistingReaction: { emoji: string; count: number; isMine: boolean; } | undefined,
-        newEmojiValue: string
-    ) => {
-        if (myExistingReaction && myExistingReaction.emoji !== newEmojiValue) {
-            return reactions.map(reaction => {
-                if (reaction.emoji === myExistingReaction.emoji && reaction.isMine) {
-                    if (reaction.count > 1) {
-                        return {
-                            ...reaction,
-                            count: reaction.count - 1,
-                            isMine: false
-                        };
-                    }
-                    return null;
-                }
-                return reaction;
-            }).filter(Boolean) as typeof reactions;
-        }
-
-        return reactions;
-    }, []);
-
-    // 새 이모지 추가 또는 업데이트 헬퍼 함수
-    const addOrUpdateEmoji = useCallback((
-        reactions: Post['reactions'] = [],
-        emojiValue: string
-    ) => {
-        const existingIndex = reactions.findIndex(reaction => reaction.emoji === emojiValue);
-
-        if (existingIndex !== -1) {
-            return reactions.map((reaction, index) => {
-                if (index === existingIndex) {
-                    return {
-                        ...reaction,
-                        count: reaction.count + 1,
-                        isMine: true
-                    };
-                }
-                return reaction;
-            });
-        } else {
-            return [
-                ...reactions,
-                {
-                    emoji: emojiValue,
-                    count: 1,
-                    isMine: true
-                }
-            ];
-        }
-    }, []);
-
     // 인증 체크
     useEffect(() => {
         console.log('현재 액세스 토큰:', accessToken);
@@ -232,33 +140,6 @@ const FeedClient = () => {
         fetchCards();
     }, [currentDate]);
 
-    // 날짜 변경 함수
-    const changeDate = useCallback((days: number) => {
-        const newDate = new Date(currentDate);
-        newDate.setDate(newDate.getDate() + days);
-        setCurrentDate(newDate);
-    }, [currentDate]);
-
-    // 캘린더에서 날짜 선택 함수
-    const selectDate = useCallback((date: Date) => {
-        setCurrentDate(date);
-        setShowCalendar(false);
-    }, []);
-
-    // 캘린더 외부 클릭 감지
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
-                setShowCalendar(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
-
     // 새 포스트 저장 함수
     const handleSavePost = async (content: string, color: string) => {
         setIsLoading(true);
@@ -280,6 +161,61 @@ const FeedClient = () => {
             setIsLoading(false);
         }
     };
+
+    // 이모지 처리 헬퍼 함수
+    const handleExistingEmoji = useCallback((
+        reactions: Post['reactions'] = [],
+        myExistingReaction: { emoji: string; count: number; isMine: boolean; } | undefined,
+        newEmojiValue: string
+    ) => {
+        if (myExistingReaction && myExistingReaction.emoji !== newEmojiValue) {
+            return reactions.map(reaction => {
+                if (reaction.emoji === myExistingReaction.emoji && reaction.isMine) {
+                    if (reaction.count > 1) {
+                        return {
+                            ...reaction,
+                            count: reaction.count - 1,
+                            isMine: false
+                        };
+                    }
+                    return null;
+                }
+                return reaction;
+            }).filter(Boolean) as typeof reactions;
+        }
+
+        return reactions;
+    }, []);
+
+    // 새 이모지 추가 또는 업데이트 헬퍼 함수
+    const addOrUpdateEmoji = useCallback((
+        reactions: Post['reactions'] = [],
+        emojiValue: string
+    ) => {
+        const existingIndex = reactions.findIndex(reaction => reaction.emoji === emojiValue);
+
+        if (existingIndex !== -1) {
+            return reactions.map((reaction, index) => {
+                if (index === existingIndex) {
+                    return {
+                        ...reaction,
+                        count: reaction.count + 1,
+                        isMine: true
+                    };
+                }
+                return reaction;
+            });
+        } else {
+            return [
+                ...reactions,
+                {
+                    emoji: emojiValue,
+                    count: 1,
+                    isMine: true
+                }
+            ];
+        }
+    }, []);
 
     // 포스트 삭제 함수
     const handleDeletePost = useCallback(async (postId: string) => {
@@ -426,50 +362,24 @@ const FeedClient = () => {
 
     return (
         <FeedContainer>
-            <Header>
-                <HeaderContent>
-                    <DateNavigation>
-                        <DateButton
-                            isHovered={leftArrowHovered}
-                            onMouseEnter={() => setLeftArrowHovered(true)}
-                            onMouseLeave={() => setLeftArrowHovered(false)}
-                            onClick={() => changeDate(-1)}
-                            aria-label="이전 날짜"
-                        >
-                            <IoIosArrowBack size={18} />
-                        </DateButton>
-                        <DateText onClick={() => setShowCalendar(!showCalendar)}>
-                            {formatDate(currentDate)}
-                        </DateText>
-                        <DateButton
-                            isHovered={rightArrowHovered}
-                            onMouseEnter={() => setRightArrowHovered(true)}
-                            onMouseLeave={() => setRightArrowHovered(false)}
-                            onClick={() => changeDate(1)}
-                            aria-label="다음 날짜"
-                        >
-                            <IoIosArrowForward size={18} />
-                        </DateButton>
-                    </DateNavigation>
-
-                    {showCalendar && (
-                        <Calendar
-                            selectedDate={currentDate}
-                            onDateSelect={selectDate}
-                            containerRef={calendarRef}
-                        />
-                    )}
-                </HeaderContent>
-            </Header>
+            <Header
+                currentDate={currentDate}
+                setCurrentDate={setCurrentDate}
+                colors={colors}
+            />
 
             <FeedContentWrapper>
                 <MainContent>
-                    <HeaderContainer>
-                        <GroupTitle>우리은행 25년도 7월 행번</GroupTitle>
-                        <GradientText>함께 성장해요⚡️</GradientText>
-                    </HeaderContainer>
+                    <PageHeader
+                        groupTitle="우리은행 25년도 7월 행번"
+                        gradientText="함께 성장해요⚡️"
+                        colors={colors}
+                    />
 
-                    {renderAnnouncementBox(notification || "여러분의 영업점 생활을 응원합니다 :)")}
+                    <AnnouncementBox
+                        message={notification || "여러분의 영업점 생활을 응원합니다 :)"}
+                        colors={colors}
+                    />
 
                     <PostsContainer>
                         {isLoading ? (
@@ -559,12 +469,13 @@ const FeedClient = () => {
                         )}
                     </PostsContainer>
                 </MainContent>
+
                 <FloatingButton
-                    aria-label="글 작성하기"
                     onClick={() => setShowPostModal(true)}
-                >
-                    <MdEdit size={28} />
-                </FloatingButton>
+                    icon={<MdEdit size={28} />}
+                    ariaLabel="글 작성하기"
+                    colors={colors}
+                />
             </FeedContentWrapper>
 
             <PostModal
