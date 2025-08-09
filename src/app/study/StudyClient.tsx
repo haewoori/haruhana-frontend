@@ -80,6 +80,7 @@ interface Study {
     title: string;
     currentMembers: number;
     totalMembers: number;
+    startDate: string;
     deadline: string;
     description: string;
     members: Member[];
@@ -107,6 +108,7 @@ const MOCK_STUDIES: Study[] = [
         title: '정보처리기사 스터디',
         currentMembers: 3,
         totalMembers: 10,
+        startDate: '2025-08-01',
         deadline: '2025-08-31',
         description: '정보처리기사 자격증 취득을 위한 스터디입니다.\n\n매주 화요일 저녁 8시에 온라인으로 모여서 기출문제를 풀고 함께 공부하는 방식으로 진행됩니다.\n\n함께 공부하며 올해 안에 자격증 취득을 목표로 하고 있습니다!',
         members: [
@@ -129,6 +131,7 @@ const MOCK_STUDIES: Study[] = [
         title: '주말 독서모임',
         currentMembers: 5,
         totalMembers: 8,
+        startDate: '2025-08-10',
         deadline: '2025-08-20',
         description: '매주 토요일 오후 2시에 강남역 인근 카페에서 모여 함께 책을 읽고 이야기를 나누는 모임입니다.\n\n다양한 장르의 책을 함께 읽으며 서로의 생각을 나누고 싶어요.\n\n첫 모임은 8월 마지막 주 토요일에 진행될 예정입니다.',
         members: [
@@ -153,6 +156,7 @@ const MOCK_STUDIES: Study[] = [
         title: 'SQLD 자격증 스터디',
         currentMembers: 7,
         totalMembers: 7,
+        startDate: '2025-07-01',
         deadline: '2025-07-20',
         description: 'SQLD 자격증 취득을 위한 스터디입니다. 모집이 완료되었습니다.\n\n매주 월, 수, 금 저녁 9시에 온라인으로 모여 SQL 문제를 풀고 있습니다.\n\n9월 시험을 목표로 준비 중입니다.',
         members: [
@@ -163,6 +167,30 @@ const MOCK_STUDIES: Study[] = [
             { id: '111', name: '황지영' },
             { id: '112', name: '노현우' },
             { id: '113', name: '임수진' }
+        ],
+        isApplied: false
+    },
+    {
+        id: '4',
+        status: 'recruiting',
+        type: 'hobby',
+        isOnline: true,
+        author: {
+            id: '104',
+            name: '최지원',
+            profileImage: 'https://randomuser.me/api/portraits/women/28.jpg'
+        },
+        title: '영어 회화 스터디',
+        currentMembers: 4,
+        totalMembers: 6,
+        startDate: '2025-08-15',
+        deadline: '2025-09-15',
+        description: '일상 영어 회화 실력 향상을 위한 스터디입니다.\n\n매주 목요일 저녁 7시에 온라인으로 모여 다양한 주제로 영어 대화를 나누는 방식으로 진행됩니다.\n\n부담 없이 참여하셔서 함께 영어 실력을 향상시켜요!',
+        members: [
+            { id: '104', name: '최지원' },
+            { id: '106', name: '한미영' },
+            { id: '114', name: '강동훈' },
+            { id: '115', name: '정소연' }
         ],
         isApplied: false
     }
@@ -219,14 +247,30 @@ const StudyClient = () => {
         fetchStudies();
     }, []);
 
-    // 필터링된 스터디 목록을 가져오는 함수
+    // 날짜 필터링 함수
+    const isDateInRange = useCallback((study: Study, date: Date) => {
+        const selectedDate = new Date(date);
+        selectedDate.setHours(0, 0, 0, 0);
+
+        const startDate = new Date(study.startDate);
+        startDate.setHours(0, 0, 0, 0);
+
+        const endDate = new Date(study.deadline);
+        endDate.setHours(0, 0, 0, 0);
+
+        return selectedDate >= startDate && selectedDate <= endDate;
+    }, []);
+
+    // 필터링된 스터디 목록 반환 함수
     const getFilteredStudies = useCallback(() => {
+        const dateFiltered = studies.filter(study => isDateInRange(study, currentDate));
+
         if (filters.status === 'all') {
-            return studies;
+            return dateFiltered;
         }
 
-        return studies.filter(study => study.status === filters.status);
-    }, [studies, filters]);
+        return dateFiltered.filter(study => study.status === filters.status);
+    }, [studies, filters, currentDate, isDateInRange]);
 
     // 필터 버튼 클릭 핸들러
     const handleFilterChange = useCallback((status: StudyStatus) => {
@@ -245,11 +289,13 @@ const StudyClient = () => {
 
     // 각 상태별 스터디 개수 계산
     const getStudyCountByStatus = useCallback((status: StudyStatus): number => {
+        const dateFiltered = studies.filter(study => isDateInRange(study, currentDate));
+
         if (status === 'all') {
-            return studies.length;
+            return dateFiltered.length;
         }
-        return studies.filter(study => study.status === status).length;
-    }, [studies]);
+        return dateFiltered.filter(study => study.status === status).length;
+    }, [studies, currentDate, isDateInRange]);
 
     // 필터 렌더링 함수
     const renderFilters = () => (
@@ -349,6 +395,12 @@ const StudyClient = () => {
         showToast('스터디 생성 기능은 추후 구현 예정입니다.', 'info');
     }, [showToast]);
 
+    // 날짜에 따른 필터링된 스터디 수 확인
+    const dateFilteredStudiesCount = studies.filter(study => isDateInRange(study, currentDate)).length;
+
+    // 최종 필터링된 스터디 목록 가져오기
+    const filteredStudies = getFilteredStudies();
+
     return (
         <StudyContainer>
             <Header
@@ -369,7 +421,7 @@ const StudyClient = () => {
                         colors={colors}
                     />
 
-                    {!isLoading && !error && studies.length > 0 && renderFilters()}
+                    {!isLoading && !error && dateFilteredStudiesCount > 0 && renderFilters()}
 
                     <StudyListContainer>
                         {isLoading ? (
@@ -383,8 +435,17 @@ const StudyClient = () => {
                             <EmptyStateText>
                                 현재 진행 중인 스터디가 없습니다. 첫 번째 스터디를 만들어보세요!
                             </EmptyStateText>
+                        ) : dateFilteredStudiesCount === 0 ? (
+                            <EmptyStateText>
+                                선택한 날짜({formatDate(currentDate)})에 진행 중인 스터디가 없습니다.
+                                다른 날짜를 선택해보세요.
+                            </EmptyStateText>
+                        ) : filteredStudies.length === 0 ? (
+                            <EmptyStateText>
+                                현재 필터 조건에 맞는 스터디가 없습니다. 다른 필터를 선택해보세요.
+                            </EmptyStateText>
                         ) : (
-                            studies.map(study => (
+                            filteredStudies.map(study => (
                                 <StudyCard key={study.id}>
                                     <CardHeader>
                                         <TagsContainer>
@@ -415,7 +476,6 @@ const StudyClient = () => {
                                         </ProfileSection>
 
                                         <StudyTitle>{study.title}</StudyTitle>
-
                                         <StudyInfoContainer>
                                             <MemberCount>
                                                 <MdPerson size={16} color="#6B7280" />
@@ -427,7 +487,7 @@ const StudyClient = () => {
                                             <Deadline>
                                                 <MdCalendarToday size={16} color="#6B7280" />
                                                 <DeadlineValue>
-                                                    {new Date(study.deadline).toLocaleDateString()}
+                                                    {new Date(study.deadline).toLocaleDateString()} 마감
                                                 </DeadlineValue>
                                             </Deadline>
                                         </StudyInfoContainer>
