@@ -21,7 +21,10 @@ export const colors = {
     }
 };
 
-export const DatePickerContainer = styled.div`
+interface SizeProps {
+    size?: 'regular' | 'small';
+}
+export const DatePickerContainer = styled.div<SizeProps>`
     position: absolute;
     top: calc(100% + 0.5rem);
     left: 50%;
@@ -30,11 +33,11 @@ export const DatePickerContainer = styled.div`
     filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
 `;
 
-export const CalendarWrapper = styled.div`
+export const CalendarWrapper = styled.div<SizeProps>`
     background-color: white;
-    border-radius: 1rem;
-    padding: 1rem;
-    width: 320px;
+    border-radius: ${props => props.size === 'small' ? '0.75rem' : '1rem'};
+    padding: ${props => props.size === 'small' ? '0.5rem' : '1rem'};
+    width: ${props => props.size === 'small' ? '210px' : '320px'};
     border: 1px solid ${colors.neutral[200]};
 `;
 
@@ -42,29 +45,30 @@ export const CalendarHeader = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 `;
 
-export const CalendarTitle = styled.div`
+export const CalendarTitle = styled.div<SizeProps>`
     font-weight: 600;
     color: ${colors.neutral[800]};
+    font-size: ${props => props.size === 'small' ? '0.75rem' : '1rem'};
 `;
 
-export const CalendarGrid = styled.div`
+export const CalendarGrid = styled.div<SizeProps>`
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 0.5rem;
+    gap: ${props => props.size === 'small' ? '0.25rem' : '0.5rem'};
 `;
 
-export const CalendarDayHeader = styled.div`
+export const CalendarDayHeader = styled.div<SizeProps>`
     text-align: center;
-    font-size: 0.75rem;
+    font-size: ${props => props.size === 'small' ? '0.6rem' : '0.75rem'};
     font-weight: 600;
     color: ${colors.neutral[500]};
-    padding: 0.5rem 0;
+    padding: ${props => props.size === 'small' ? '0.2rem 0' : '0.5rem 0'};
 `;
 
-interface CalendarDayProps {
+interface CalendarDayProps extends SizeProps {
     isCurrentMonth: boolean;
     isSelected: boolean;
     isToday: boolean;
@@ -74,35 +78,35 @@ export const CalendarDay = styled.button<CalendarDayProps>`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: ${props => props.size === 'small' ? '22px' : '36px'};
+    height: ${props => props.size === 'small' ? '22px' : '36px'};
     border-radius: 50%;
-    font-size: 0.875rem;
+    font-size: ${props => props.size === 'small' ? '0.65rem' : '0.875rem'};
     cursor: pointer;
     transition: all 0.2s;
-    
+    padding: 0;
     color: ${props => props.isCurrentMonth ? colors.neutral[700] : colors.neutral[400]};
-    
     background-color: ${props => props.isSelected ? colors.primary.main : 'transparent'};
     color: ${props => props.isSelected ? 'white' : props.isCurrentMonth ? colors.neutral[700] : colors.neutral[400]};
     font-weight: ${props => props.isSelected ? '600' : '400'};
     
-    border: ${props => props.isToday && !props.isSelected ? `2px solid ${colors.primary.main}` : 'none'};
+    border: ${props => props.isToday && !props.isSelected ? `1px solid ${colors.primary.main}` : 'none'};
     
     &:hover {
         background-color: ${props => props.isSelected ? colors.primary.main : colors.neutral[100]};
     }
 `;
 
-export const DateButton = styled.button<{ isHovered: boolean }>`
+export const DateButton = styled.button<{ isHovered: boolean; size?: 'regular' | 'small' }>`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    width: ${props => props.size === 'small' ? '1.25rem' : '2rem'};
+    height: ${props => props.size === 'small' ? '1.25rem' : '2rem'};
     border-radius: 9999px;
     cursor: pointer;
     transition: all 0.2s;
     color: ${props => props.isHovered ? colors.primary.main : colors.neutral[400]};
     background-color: ${props => props.isHovered ? colors.primary.light : 'transparent'};
+    padding: 0;
 `;
