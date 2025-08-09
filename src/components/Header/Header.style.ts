@@ -1,26 +1,5 @@
 import styled from "@emotion/styled";
-
-// 색상 타입은 앱 전체에서 공통으로 사용되는 값이므로 별도 파일로 분리할 수도 있습니다
-export type Colors = {
-    primary: {
-        light: string;
-        main: string;
-        dark: string;
-        gradient: string;
-    };
-    neutral: {
-        50: string;
-        100: string;
-        200: string;
-        300: string;
-        400: string;
-        500: string;
-        600: string;
-        700: string;
-        800: string;
-        900: string;
-    };
-};
+import {Colors} from "../types";
 
 export const HeaderContainer = styled.header<{ colors: Colors }>`
     position: sticky;
