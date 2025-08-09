@@ -20,10 +20,10 @@ const NavigationBar = () => {
             <NavIcon className="material-icons">school</NavIcon>
             <NavLabel $isActive={isActive('/study')}>스터디</NavLabel>
           </NavItem>
-          <NavItem href="/my" $isActive={isActive('/my')}>
-            <NavIcon className="material-icons">person</NavIcon>
-            <NavLabel $isActive={isActive('/my')}>마이</NavLabel>
-          </NavItem>
+          {/*<NavItem href="/my" $isActive={isActive('/my')}>*/}
+          {/*  <NavIcon className="material-icons">person</NavIcon>*/}
+          {/*  <NavLabel $isActive={isActive('/my')}>마이</NavLabel>*/}
+          {/*</NavItem>*/}
         </NavInner>
       </NavContainer>
   );
