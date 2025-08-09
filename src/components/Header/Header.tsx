@@ -8,8 +8,8 @@ import {
     DateNavigation,
     DateButton,
     DateText,
-    Colors
 } from './Header.style';
+import { Colors } from '../types';
 
 interface HeaderProps {
     currentDate: Date;

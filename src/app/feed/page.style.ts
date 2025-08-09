@@ -59,7 +59,7 @@ export const colors = {
     },
     success: '#4B5563',
     warning: '#4B5563',
-    error: '#4B5563',
+    error: '#EF4444',
     info: '#4B5563'
 };
 

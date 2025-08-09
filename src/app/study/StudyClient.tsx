@@ -19,8 +19,8 @@ import {
 
 import { useToast } from '@/hooks/useToast';
 import { ToastContainer } from '@/components/Toast';
-import Calendar from '@/components/Calendar/Calendar';
 import StudyModal from './StudyModal';
+import StudyCreateModal, { StudyFormData } from '@/components/StudyCreateModal/StudyCreateModal';
 import { formatDate } from '@/utils/dateUtils';
 
 import Header from '@/components/Header/Header';
@@ -207,6 +207,7 @@ const StudyClient = () => {
     const [selectedStudy, setSelectedStudy] = useState<Study | null>(null);
     const [showStudyModal, setShowStudyModal] = useState(false);
     const [notification, setNotification] = useState<string | null>("스터디에 참여하고 함께 성장해요!");
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     const [filters, setFilters] = useState<StudyFilters>({
         status: 'all'
@@ -390,9 +391,53 @@ const StudyClient = () => {
         setSelectedStudy(null);
     }, []);
 
-    // 새 스터디 생성 페이지로 이동 (추후 구현)
+    // 새 스터디 생성 모달 열기
     const handleCreateStudy = useCallback(() => {
-        showToast('스터디 생성 기능은 추후 구현 예정입니다.', 'info');
+        setShowCreateModal(true);
+    }, []);
+
+    // 새 스터디 생성 모달 닫기
+    const handleCloseCreateModal = useCallback(() => {
+        setShowCreateModal(false);
+    }, []);
+
+    // 새 스터디 저장 핸들러
+    const handleSaveStudy = useCallback((studyData: StudyFormData) => {
+        // 실제 구현에서는 API 호출
+        // await createStudy(studyData);
+
+        // 현재 사용자 정보 (실제로는 Redux 또는 Context에서 가져옴)
+        const currentUser = {
+            id: '101', // 임시 사용자 ID
+            name: '김우리',
+            profileImage: 'https://randomuser.me/api/portraits/men/32.jpg'
+        };
+
+        // 새 스터디 객체 생성
+        const newStudy: Study = {
+            id: Date.now().toString(), // 임시 ID 생성
+            status: 'recruiting',
+            type: studyData.type,
+            isOnline: studyData.isOnline,
+            author: currentUser,
+            title: studyData.title,
+            currentMembers: 1, // 생성자가 첫 번째 멤버
+            totalMembers: studyData.totalMembers,
+            startDate: studyData.startDate,
+            deadline: studyData.deadline,
+            description: studyData.description,
+            members: [{ id: currentUser.id, name: currentUser.name }],
+            isApplied: true // 생성자는 자동으로 참여됨
+        };
+
+        // 스터디 목록에 추가
+        setStudies(prevStudies => [newStudy, ...prevStudies]);
+
+        // 모달 닫기
+        setShowCreateModal(false);
+
+        // 성공 메시지 표시
+        showToast('스터디가 성공적으로 생성되었습니다.', 'success');
     }, [showToast]);
 
     // 날짜에 따른 필터링된 스터디 수 확인
@@ -546,6 +591,12 @@ const StudyClient = () => {
                 study={selectedStudy}
                 onApply={handleApplyStudy}
                 onCancelApply={handleCancelApply}
+            />
+
+            <StudyCreateModal
+                isOpen={showCreateModal}
+                onClose={handleCloseCreateModal}
+                onSave={handleSaveStudy}
             />
 
             <ToastContainer toasts={toasts} onClose={hideToast} />
