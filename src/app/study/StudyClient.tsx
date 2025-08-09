@@ -4,10 +4,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import {
-    IoIosArrowBack,
-    IoIosArrowForward,
-} from 'react-icons/io';
-import {
     MdCampaign,
     MdEdit,
     MdPerson,
@@ -27,7 +23,6 @@ import Calendar from '@/components/Calendar/Calendar';
 import StudyModal from './StudyModal';
 import { formatDate } from '@/utils/dateUtils';
 
-// 공통 컴포넌트 import
 import Header from '@/components/Header/Header';
 import PageHeader from '@/components/PageHeader/PageHeader';
 import AnnouncementBox from '@/components/AnnouncementBox/AnnouncementBox';
@@ -64,7 +59,7 @@ import {
     StatusIndicator,
     ApplyBadge,
     CardActions,
-    ViewDetailsButton
+    ViewDetailsButton, FilterButton, FilterContainer, FilterBadge, FilterDivider, ClearFiltersButton
 } from './page.style';
 
 interface Member {
@@ -185,6 +180,9 @@ const StudyClient = () => {
     const [showStudyModal, setShowStudyModal] = useState(false);
     const [notification, setNotification] = useState<string | null>("스터디에 참여하고 함께 성장해요!");
 
+    const [filters, setFilters] = useState<StudyFilters>({
+        status: 'all'
+    });
     const { toasts, showToast, hideToast } = useToast();
 
     // 인증 체크
@@ -220,6 +218,89 @@ const StudyClient = () => {
 
         fetchStudies();
     }, []);
+
+    // 필터링된 스터디 목록을 가져오는 함수
+    const getFilteredStudies = useCallback(() => {
+        if (filters.status === 'all') {
+            return studies;
+        }
+
+        return studies.filter(study => study.status === filters.status);
+    }, [studies, filters]);
+
+    // 필터 버튼 클릭 핸들러
+    const handleFilterChange = useCallback((status: StudyStatus) => {
+        setFilters(prev => ({
+            ...prev,
+            status: status
+        }));
+    }, []);
+
+    // 필터 초기화 핸들러
+    const clearFilters = useCallback(() => {
+        setFilters({
+            status: 'all'
+        });
+    }, []);
+
+    // 각 상태별 스터디 개수 계산
+    const getStudyCountByStatus = useCallback((status: StudyStatus): number => {
+        if (status === 'all') {
+            return studies.length;
+        }
+        return studies.filter(study => study.status === status).length;
+    }, [studies]);
+
+    // 필터 렌더링 함수
+    const renderFilters = () => (
+        <FilterContainer>
+            <FilterButton
+                active={filters.status === 'all'}
+                onClick={() => handleFilterChange('all')}
+            >
+                <MdFilterList size={16} />
+                전체
+                <FilterBadge>{getStudyCountByStatus('all')}</FilterBadge>
+            </FilterButton>
+
+            <FilterButton
+                active={filters.status === 'recruiting'}
+                onClick={() => handleFilterChange('recruiting')}
+            >
+                <MdAccessTime size={16} />
+                모집 중
+                <FilterBadge>{getStudyCountByStatus('recruiting')}</FilterBadge>
+            </FilterButton>
+
+            <FilterButton
+                active={filters.status === 'completed'}
+                onClick={() => handleFilterChange('completed')}
+            >
+                <MdCheck size={16} />
+                모집 완료
+                <FilterBadge>{getStudyCountByStatus('completed')}</FilterBadge>
+            </FilterButton>
+
+            <FilterButton
+                active={filters.status === 'canceled'}
+                onClick={() => handleFilterChange('canceled')}
+            >
+                <MdClose size={16} />
+                모집 취소
+                <FilterBadge>{getStudyCountByStatus('canceled')}</FilterBadge>
+            </FilterButton>
+
+            {filters.status !== 'all' && (
+                <>
+                    <FilterDivider />
+                    <ClearFiltersButton onClick={clearFilters}>
+                        <MdClear size={16} />
+                        필터 초기화
+                    </ClearFiltersButton>
+                </>
+            )}
+        </FilterContainer>
+    );
 
     // 스터디 신청 함수
     const handleApplyStudy = useCallback((studyId: string) => {
@@ -287,6 +368,8 @@ const StudyClient = () => {
                         message={notification || "스터디에 참여하고 함께 성장해요!"}
                         colors={colors}
                     />
+
+                    {!isLoading && !error && studies.length > 0 && renderFilters()}
 
                     <StudyListContainer>
                         {isLoading ? (
