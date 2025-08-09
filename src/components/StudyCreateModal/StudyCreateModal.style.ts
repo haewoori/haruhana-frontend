@@ -8,7 +8,7 @@ export const StudyCreateModalContent = styled.div`
 `;
 
 export const FormGroup = styled.div`
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
   position: relative;
 `;
 
