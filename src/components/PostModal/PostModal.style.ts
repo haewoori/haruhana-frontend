@@ -93,7 +93,7 @@ export const TextArea = styled.textarea`
     resize: none;
     font-size: 1rem;
     font-family: inherit;
-    margin-bottom: 1rem;
+    //margin-bottom: 1rem;
     transition: border-color 0.2s;
 
     &:focus {
@@ -111,7 +111,7 @@ export const ButtonContainer = styled.div`
     display: flex;
     justify-content: flex-end;
     gap: 0.75rem;
-    margin-top: 1.5rem;
+    //margin-top: 1.5rem;
 `;
 
 export const CancelButton = styled.button`
