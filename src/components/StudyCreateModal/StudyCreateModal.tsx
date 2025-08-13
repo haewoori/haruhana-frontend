@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MdClose, MdCheck, MdAccessTime, MdPerson } from 'react-icons/md';
+import { MdClose, MdCheck, MdAccessTime, MdPerson, MdToday } from 'react-icons/md';
 import {
   ModalOverlay,
   ModalContainer,
@@ -27,11 +27,14 @@ import {
   StudyCreateModalContent,
   CharCount,
   InputContainer,
-  MessageContainer
+  MessageContainer,
+  ReadOnlyDateDisplay
 } from './StudyCreateModal.style';
 import DatePicker from '@/components/DatePicker/DatePicker';
 import { createStudy } from '@/api/study/createStudyApi';
 import { useToast } from '@/hooks/useToast';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
 
 interface StudyCreateModalProps {
   isOpen: boolean;
@@ -51,11 +54,16 @@ export interface StudyFormData {
 }
 
 const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateModalProps) => {
+  const getTodayDate = (): string => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
   const initialFormData: StudyFormData = {
     title: '',
     type: 'certificate',
     isOnline: true,
-    startDate: '',
+    startDate: getTodayDate(),
     deadline: '',
     totalMembers: 5,
     description: '',
@@ -64,12 +72,22 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
   const [formData, setFormData] = useState<StudyFormData>(initialFormData);
   const [errors, setErrors] = useState<Partial<Record<keyof StudyFormData, string>>>({});
   const [touched, setTouched] = useState<Partial<Record<keyof StudyFormData, boolean>>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false); // 제출 중 상태 추가
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const { showToast } = useToast();
+
+  // 모달이 열릴 때마다 startDate를 오늘 날짜로 재설정
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(prev => ({
+        ...prev,
+        startDate: getTodayDate()
+      }));
+    }
+  }, [isOpen]);
 
   // 모달이 열리면 타이틀 입력 필드에 포커스
   useEffect(() => {
@@ -100,6 +118,8 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
       e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
+
+    if (name === 'startDate') return;
 
     if (type === 'number') {
       const numValue = parseInt(value, 10);
@@ -135,19 +155,6 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
           newErrors.title = '스터디명은 최대 50자까지 입력 가능합니다';
         } else {
           delete newErrors.title;
-        }
-        break;
-      case 'startDate':
-        if (!value) {
-          newErrors.startDate = '모집 시작일을 선택해주세요';
-        } else {
-          delete newErrors.startDate;
-          // 마감일이 시작일보다 이전인지 확인
-          if (formData.deadline && new Date(value) > new Date(formData.deadline)) {
-            newErrors.deadline = '마감일은 시작일 이후여야 합니다';
-          } else {
-            delete newErrors.deadline;
-          }
         }
         break;
       case 'deadline':
@@ -192,7 +199,9 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
     let newTouched: Partial<Record<keyof StudyFormData, boolean>> = {};
 
     Object.keys(formData).forEach(key => {
-      newTouched[key as keyof StudyFormData] = true;
+      if (key !== 'startDate') {
+        newTouched[key as keyof StudyFormData] = true;
+      }
     });
     setTouched(newTouched);
 
@@ -202,11 +211,6 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
       isValid = false;
     } else if (formData.title.length > 50) {
       newErrors.title = '스터디명은 최대 50자까지 입력 가능합니다';
-      isValid = false;
-    }
-
-    if (!formData.startDate) {
-      newErrors.startDate = '모집 시작일을 선택해주세요';
       isValid = false;
     }
 
@@ -276,15 +280,23 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
 
   // 폼 초기화
   const resetForm = () => {
-    setFormData(initialFormData);
+    setFormData({
+      ...initialFormData,
+      startDate: getTodayDate()
+    });
     setErrors({});
     setTouched({});
   };
 
   // 현재 날짜 이후의 날짜만 선택 가능하도록 최소 날짜 설정
   const getMinDate = (): string => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
+    return getTodayDate();
+  };
+
+  // 날짜를 표시 형식으로 변환
+  const formatDisplayDate = (dateString: string): string => {
+    if (!dateString) return '';
+    return format(new Date(dateString), 'yyyy년 MM월 dd일', { locale: ko });
   };
 
   if (!isOpen) return null;
@@ -377,17 +389,11 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
             <FormRow>
               <RowFormGroup>
                 <FormLabel htmlFor="startDate">모집 시작일</FormLabel>
-                <DatePicker
-                    id="startDate"
-                    name="startDate"
-                    value={formData.startDate}
-                    onChange={handleChange}
-                    min={getMinDate()}
-                    hasError={!!errors.startDate && touched.startDate}
-                    placeholder="시작일 선택"
-                    calendarSize="small"
-                />
-                {touched.startDate && errors.startDate && <ErrorMessage>{errors.startDate}</ErrorMessage>}
+                <ReadOnlyDateDisplay>
+                  <MdToday size={18} />
+                  <span>{formatDisplayDate(formData.startDate)}</span>
+                </ReadOnlyDateDisplay>
+                <input type="hidden" name="startDate" value={formData.startDate} />
               </RowFormGroup>
 
               <RowFormGroup>
@@ -397,7 +403,7 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
                     name="deadline"
                     value={formData.deadline}
                     onChange={handleChange}
-                    min={formData.startDate || getMinDate()}
+                    min={formData.startDate}
                     hasError={!!errors.deadline && touched.deadline}
                     placeholder="마감일 선택"
                     calendarSize="small"
