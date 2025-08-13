@@ -30,11 +30,14 @@ import {
   MessageContainer
 } from './StudyCreateModal.style';
 import DatePicker from '@/components/DatePicker/DatePicker';
+import { createStudy } from '@/api/study/createStudyApi';
+import { useToast } from '@/hooks/useToast';
 
 interface StudyCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (studyData: StudyFormData) => void;
+  onSuccess?: () => void;
 }
 
 export interface StudyFormData {
@@ -47,7 +50,7 @@ export interface StudyFormData {
   description: string;
 }
 
-const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) => {
+const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateModalProps) => {
   const initialFormData: StudyFormData = {
     title: '',
     type: 'certificate',
@@ -61,9 +64,12 @@ const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) =>
   const [formData, setFormData] = useState<StudyFormData>(initialFormData);
   const [errors, setErrors] = useState<Partial<Record<keyof StudyFormData, string>>>({});
   const [touched, setTouched] = useState<Partial<Record<keyof StudyFormData, boolean>>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false); // 제출 중 상태 추가
 
   const modalRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
+
+  const { showToast } = useToast();
 
   // 모달이 열리면 타이틀 입력 필드에 포커스
   useEffect(() => {
@@ -99,7 +105,7 @@ const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) =>
       const numValue = parseInt(value, 10);
       setFormData((prev) => ({
         ...prev,
-        [name]: isNaN(numValue) ? '' : Math.max(1, Math.min(numValue, 100)) // 1~100 사이 값으로 제한
+        [name]: isNaN(numValue) ? '' : Math.max(1, Math.min(numValue, 100))
       }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -233,10 +239,32 @@ const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) =>
   };
 
   // 저장 버튼 클릭 핸들러
-  const handleSave = () => {
-    if (validateForm()) {
+  const handleSave = async () => {
+    if (!validateForm() || isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
       onSave(formData);
+
+      const category = formData.type === 'certificate' ? 'CERTIFICATE' : 'HOBBY';
+
+      await createStudy(
+          formData.title,
+          formData.description,
+          formData.deadline,
+          category,
+          formData.isOnline
+      );
+
+      showToast?.('스터디가 성공적으로 등록되었습니다', 'success');
+      onSuccess?.();
       resetForm();
+      onClose();
+    } catch (error) {
+      console.error('스터디 생성 중 오류 발생:', error);
+      showToast?.('스터디 등록에 실패했습니다. 다시 시도해주세요.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -419,10 +447,10 @@ const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) =>
               <CancelButton onClick={handleCancel}>취소</CancelButton>
               <SaveButton
                   onClick={handleSave}
-                  disabled={Object.keys(errors).length > 0}
+                  disabled={Object.keys(errors).length > 0 || isSubmitting}
                   color="blue"
               >
-                저장
+                {isSubmitting ? '저장 중...' : '저장'}
               </SaveButton>
             </ButtonContainer>
           </StudyCreateModalContent>
