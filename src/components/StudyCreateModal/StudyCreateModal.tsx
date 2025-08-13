@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MdClose, MdCheck, MdAccessTime, MdPerson } from 'react-icons/md';
+import { MdClose, MdCheck, MdAccessTime, MdPerson, MdToday } from 'react-icons/md';
 import {
   ModalOverlay,
   ModalContainer,
@@ -27,14 +27,20 @@ import {
   StudyCreateModalContent,
   CharCount,
   InputContainer,
-  MessageContainer
+  MessageContainer,
+  ReadOnlyDateDisplay
 } from './StudyCreateModal.style';
 import DatePicker from '@/components/DatePicker/DatePicker';
+import { createStudy } from '@/api/study/createStudyApi';
+import { useToast } from '@/hooks/useToast';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
 
 interface StudyCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (studyData: StudyFormData) => void;
+  onSuccess?: () => void;
 }
 
 export interface StudyFormData {
@@ -47,12 +53,17 @@ export interface StudyFormData {
   description: string;
 }
 
-const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) => {
+const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateModalProps) => {
+  const getTodayDate = (): string => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
   const initialFormData: StudyFormData = {
     title: '',
     type: 'certificate',
     isOnline: true,
-    startDate: '',
+    startDate: getTodayDate(),
     deadline: '',
     totalMembers: 5,
     description: '',
@@ -61,9 +72,22 @@ const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) =>
   const [formData, setFormData] = useState<StudyFormData>(initialFormData);
   const [errors, setErrors] = useState<Partial<Record<keyof StudyFormData, string>>>({});
   const [touched, setTouched] = useState<Partial<Record<keyof StudyFormData, boolean>>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
+
+  const { showToast } = useToast();
+
+  // 모달이 열릴 때마다 startDate를 오늘 날짜로 재설정
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(prev => ({
+        ...prev,
+        startDate: getTodayDate()
+      }));
+    }
+  }, [isOpen]);
 
   // 모달이 열리면 타이틀 입력 필드에 포커스
   useEffect(() => {
@@ -95,11 +119,13 @@ const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) =>
   ) => {
     const { name, value, type } = e.target;
 
+    if (name === 'startDate') return;
+
     if (type === 'number') {
       const numValue = parseInt(value, 10);
       setFormData((prev) => ({
         ...prev,
-        [name]: isNaN(numValue) ? '' : Math.max(1, Math.min(numValue, 100)) // 1~100 사이 값으로 제한
+        [name]: isNaN(numValue) ? '' : Math.max(1, Math.min(numValue, 100))
       }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -129,19 +155,6 @@ const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) =>
           newErrors.title = '스터디명은 최대 50자까지 입력 가능합니다';
         } else {
           delete newErrors.title;
-        }
-        break;
-      case 'startDate':
-        if (!value) {
-          newErrors.startDate = '모집 시작일을 선택해주세요';
-        } else {
-          delete newErrors.startDate;
-          // 마감일이 시작일보다 이전인지 확인
-          if (formData.deadline && new Date(value) > new Date(formData.deadline)) {
-            newErrors.deadline = '마감일은 시작일 이후여야 합니다';
-          } else {
-            delete newErrors.deadline;
-          }
         }
         break;
       case 'deadline':
@@ -186,7 +199,9 @@ const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) =>
     let newTouched: Partial<Record<keyof StudyFormData, boolean>> = {};
 
     Object.keys(formData).forEach(key => {
-      newTouched[key as keyof StudyFormData] = true;
+      if (key !== 'startDate') {
+        newTouched[key as keyof StudyFormData] = true;
+      }
     });
     setTouched(newTouched);
 
@@ -196,11 +211,6 @@ const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) =>
       isValid = false;
     } else if (formData.title.length > 50) {
       newErrors.title = '스터디명은 최대 50자까지 입력 가능합니다';
-      isValid = false;
-    }
-
-    if (!formData.startDate) {
-      newErrors.startDate = '모집 시작일을 선택해주세요';
       isValid = false;
     }
 
@@ -233,10 +243,32 @@ const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) =>
   };
 
   // 저장 버튼 클릭 핸들러
-  const handleSave = () => {
-    if (validateForm()) {
+  const handleSave = async () => {
+    if (!validateForm() || isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
       onSave(formData);
+
+      const category = formData.type === 'certificate' ? 'CERTIFICATE' : 'HOBBY';
+
+      await createStudy(
+          formData.title,
+          formData.description,
+          formData.deadline,
+          category,
+          formData.isOnline
+      );
+
+      showToast?.('스터디가 성공적으로 등록되었습니다', 'success');
+      onSuccess?.();
       resetForm();
+      onClose();
+    } catch (error) {
+      console.error('스터디 생성 중 오류 발생:', error);
+      showToast?.('스터디 등록에 실패했습니다. 다시 시도해주세요.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -248,15 +280,23 @@ const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) =>
 
   // 폼 초기화
   const resetForm = () => {
-    setFormData(initialFormData);
+    setFormData({
+      ...initialFormData,
+      startDate: getTodayDate()
+    });
     setErrors({});
     setTouched({});
   };
 
   // 현재 날짜 이후의 날짜만 선택 가능하도록 최소 날짜 설정
   const getMinDate = (): string => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
+    return getTodayDate();
+  };
+
+  // 날짜를 표시 형식으로 변환
+  const formatDisplayDate = (dateString: string): string => {
+    if (!dateString) return '';
+    return format(new Date(dateString), 'yyyy년 MM월 dd일', { locale: ko });
   };
 
   if (!isOpen) return null;
@@ -349,17 +389,11 @@ const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) =>
             <FormRow>
               <RowFormGroup>
                 <FormLabel htmlFor="startDate">모집 시작일</FormLabel>
-                <DatePicker
-                    id="startDate"
-                    name="startDate"
-                    value={formData.startDate}
-                    onChange={handleChange}
-                    min={getMinDate()}
-                    hasError={!!errors.startDate && touched.startDate}
-                    placeholder="시작일 선택"
-                    calendarSize="small"
-                />
-                {touched.startDate && errors.startDate && <ErrorMessage>{errors.startDate}</ErrorMessage>}
+                <ReadOnlyDateDisplay>
+                  <MdToday size={18} />
+                  <span>{formatDisplayDate(formData.startDate)}</span>
+                </ReadOnlyDateDisplay>
+                <input type="hidden" name="startDate" value={formData.startDate} />
               </RowFormGroup>
 
               <RowFormGroup>
@@ -369,7 +403,7 @@ const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) =>
                     name="deadline"
                     value={formData.deadline}
                     onChange={handleChange}
-                    min={formData.startDate || getMinDate()}
+                    min={formData.startDate}
                     hasError={!!errors.deadline && touched.deadline}
                     placeholder="마감일 선택"
                     calendarSize="small"
@@ -419,10 +453,10 @@ const StudyCreateModal = ({ isOpen, onClose, onSave }: StudyCreateModalProps) =>
               <CancelButton onClick={handleCancel}>취소</CancelButton>
               <SaveButton
                   onClick={handleSave}
-                  disabled={Object.keys(errors).length > 0}
+                  disabled={Object.keys(errors).length > 0 || isSubmitting}
                   color="blue"
               >
-                저장
+                {isSubmitting ? '저장 중...' : '저장'}
               </SaveButton>
             </ButtonContainer>
           </StudyCreateModalContent>

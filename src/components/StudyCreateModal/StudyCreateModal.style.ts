@@ -105,3 +105,23 @@ export const MessageContainer = styled.div`
   min-height: 1.5rem;
   margin-top: 0.25rem;
 `;
+
+export const ReadOnlyDateDisplay = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid ${colors.neutral[300]};
+  border-radius: 0.375rem;
+  background-color: ${colors.neutral[100]};
+  color: ${colors.neutral[400]};
+  font-size: 0.875rem;
+  
+  svg {
+    color: ${colors.neutral[400]};
+  }
+  
+  span {
+    font-weight: 400;
+  }
+`;
