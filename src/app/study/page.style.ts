@@ -669,3 +669,42 @@ export const ViewDetailsButton = styled.button`
     background-color: ${colors.neutral[200]};
   }
 `;
+
+export const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+`;
+
+export const PaginationButton = styled.button<{ disabled?: boolean }>`
+  padding: 8px 16px;
+  background-color: ${props => props.disabled ? '#e2e8f0' : '#3b82f6'};
+  color: ${props => props.disabled ? '#94a3b8' : 'white'};
+  border: none;
+  border-radius: 4px;
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: ${props => props.disabled ? '#e2e8f0' : '#2563eb'};
+  }
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  }
+  
+  &:not(:last-child) {
+    margin-right: 12px;
+  }
+`;
+
+export const PaginationInfo = styled.div`
+  margin: 0 16px;
+  font-size: 14px;
+  color: #4b5563;
+`;

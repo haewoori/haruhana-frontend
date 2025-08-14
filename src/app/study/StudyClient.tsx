@@ -22,6 +22,8 @@ import { ToastContainer } from '@/components/Toast';
 import StudyModal from './StudyModal';
 import StudyCreateModal, { StudyFormData } from '@/components/StudyCreateModal/StudyCreateModal';
 import { formatDate } from '@/utils/dateUtils';
+import { getStudies } from '@/api/study/getStudyApi';
+import { adaptStudyCardToStudy } from '@/utils/studyAdapter';
 
 import Header from '@/components/Header/Header';
 import PageHeader from '@/components/PageHeader/PageHeader';
@@ -60,6 +62,9 @@ import {
     ApplyBadge,
     CardActions,
     ViewDetailsButton, FilterButton, FilterContainer, FilterBadge, FilterDivider, ClearFiltersButton,
+    PaginationContainer,
+    PaginationButton,
+    PaginationInfo,
 } from './page.style';
 
 import {
@@ -74,109 +79,6 @@ interface Member {
     id: string;
     name: string;
 }
-
-// 임시 스터디 데이터
-const MOCK_STUDIES: Study[] = [
-    {
-        id: '1',
-        status: StudyStatusType.RECRUITING,
-        type: StudyType.CERTIFICATE,
-        isOnline: true,
-        author: {
-            id: '101',
-            name: '김우리',
-            profileImage: 'https://randomuser.me/api/portraits/men/32.jpg'
-        },
-        title: '정보처리기사 스터디',
-        currentMembers: 3,
-        totalMembers: 10,
-        startDate: '2025-08-01',
-        deadline: '2025-08-31',
-        description: '정보처리기사 자격증 취득을 위한 스터디입니다.\n\n매주 화요일 저녁 8시에 온라인으로 모여서 기출문제를 풀고 함께 공부하는 방식으로 진행됩니다.\n\n함께 공부하며 올해 안에 자격증 취득을 목표로 하고 있습니다!',
-        members: [
-            { id: '101', name: '김우리' },
-            { id: '102', name: '이하나' },
-            { id: '103', name: '박민수' }
-        ],
-        isApplied: false
-    },
-    {
-        id: '2',
-        status: StudyStatusType.RECRUITING,
-        type: StudyType.HOBBY,
-        isOnline: false,
-        author: {
-            id: '102',
-            name: '이하나',
-            profileImage: 'https://randomuser.me/api/portraits/women/44.jpg'
-        },
-        title: '주말 독서모임',
-        currentMembers: 5,
-        totalMembers: 8,
-        startDate: '2025-08-10',
-        deadline: '2025-08-20',
-        description: '매주 토요일 오후 2시에 강남역 인근 카페에서 모여 함께 책을 읽고 이야기를 나누는 모임입니다.\n\n다양한 장르의 책을 함께 읽으며 서로의 생각을 나누고 싶어요.\n\n첫 모임은 8월 마지막 주 토요일에 진행될 예정입니다.',
-        members: [
-            { id: '102', name: '이하나' },
-            { id: '104', name: '최지원' },
-            { id: '105', name: '정승호' },
-            { id: '106', name: '한미영' },
-            { id: '107', name: '오준석' }
-        ],
-        isApplied: true
-    },
-    {
-        id: '3',
-        status: StudyStatusType.COMPLETED,
-        type: StudyType.CERTIFICATE,
-        isOnline: true,
-        author: {
-            id: '103',
-            name: '박민수',
-            profileImage: 'https://randomuser.me/api/portraits/men/62.jpg'
-        },
-        title: 'SQLD 자격증 스터디',
-        currentMembers: 7,
-        totalMembers: 7,
-        startDate: '2025-08-01',
-        deadline: '2025-08-20',
-        description: 'SQLD 자격증 취득을 위한 스터디입니다. 모집이 완료되었습니다.\n\n매주 월, 수, 금 저녁 9시에 온라인으로 모여 SQL 문제를 풀고 있습니다.\n\n9월 시험을 목표로 준비 중입니다.',
-        members: [
-            { id: '103', name: '박민수' },
-            { id: '108', name: '김태호' },
-            { id: '109', name: '이서연' },
-            { id: '110', name: '장윤성' },
-            { id: '111', name: '황지영' },
-            { id: '112', name: '노현우' },
-            { id: '113', name: '임수진' }
-        ],
-        isApplied: false
-    },
-    {
-        id: '4',
-        status: StudyStatusType.RECRUITING,
-        type: StudyType.HOBBY,
-        isOnline: true,
-        author: {
-            id: '104',
-            name: '최지원',
-            profileImage: 'https://randomuser.me/api/portraits/women/28.jpg'
-        },
-        title: '영어 회화 스터디',
-        currentMembers: 4,
-        totalMembers: 6,
-        startDate: '2025-08-15',
-        deadline: '2025-09-15',
-        description: '일상 영어 회화 실력 향상을 위한 스터디입니다.\n\n매주 목요일 저녁 7시에 온라인으로 모여 다양한 주제로 영어 대화를 나누는 방식으로 진행됩니다.\n\n부담 없이 참여하셔서 함께 영어 실력을 향상시켜요!',
-        members: [
-            { id: '104', name: '최지원' },
-            { id: '106', name: '한미영' },
-            { id: '114', name: '강동훈' },
-            { id: '115', name: '정소연' }
-        ],
-        isApplied: false
-    }
-];
 
 const StudyClient = () => {
     const router = useRouter();
@@ -196,6 +98,13 @@ const StudyClient = () => {
     });
     const { toasts, showToast, hideToast } = useToast();
 
+    const [pagination, setPagination] = useState({
+        page: 0,
+        size: 10,
+        totalPages: 0,
+        totalElements: 0
+    });
+
     // 인증 체크
     useEffect(() => {
         if (!accessToken) {
@@ -203,22 +112,35 @@ const StudyClient = () => {
         }
     }, [isAuthenticated, accessToken, router]);
 
-    // 스터디 데이터 로드 (실제로는 API 호출)
+    // 스터디 데이터 로드
     useEffect(() => {
         const fetchStudies = async () => {
             setIsLoading(true);
             setError(null);
 
             try {
-                // 실제 구현에서는 API 호출로 대체
-                // const response = await getStudies();
-                // setStudies(response);
+                const params = {
+                    page: pagination.page,
+                    size: pagination.size,
+                    sort: "createdTime,desc"
+                };
 
-                // 목업 데이터 사용
-                setTimeout(() => {
-                    setStudies(MOCK_STUDIES);
-                    setIsLoading(false);
-                }, 800);
+                if (filters.status !== 'all') {
+                    params.available = filters.status === StudyStatusType.RECRUITING;
+                }
+
+                const response = await getStudies(params);
+                const adaptedStudies = response.result.content.map(adaptStudyCardToStudy);
+
+                setPagination({
+                    page: response.result.pageable.pageNumber,
+                    size: response.result.pageable.pageSize,
+                    totalPages: response.result.totalPages,
+                    totalElements: response.result.totalElements
+                });
+
+                setStudies(adaptedStudies);
+                setIsLoading(false);
             } catch (err) {
                 console.error('스터디 데이터를 불러오는 중 오류가 발생했습니다:', err);
                 setError('스터디 데이터를 불러오는 중 오류가 발생했습니다. 새로고침 해주세요.');
@@ -228,7 +150,7 @@ const StudyClient = () => {
         };
 
         fetchStudies();
-    }, []);
+    }, [filters.status, pagination.page, pagination.size]);
 
     // 날짜 필터링 함수
     const isDateInRange = useCallback((study: Study, date: Date) => {
@@ -261,7 +183,21 @@ const StudyClient = () => {
             ...prev,
             status: status
         }));
+
+        // 필터 변경 시 페이지 초기화
+        setPagination(prev => ({
+            ...prev,
+            page: 0
+        }));
     }, []);
+
+    // 페이지 변경 핸들러 추가
+    const handlePageChange = (newPage: number) => {
+        setPagination(prev => ({
+            ...prev,
+            page: newPage
+        }));
+    };
 
     // 필터 초기화 핸들러
     const clearFilters = useCallback(() => {
@@ -448,7 +384,7 @@ const StudyClient = () => {
                             </EmptyStateText>
                         ) : dateFilteredStudiesCount === 0 ? (
                             <EmptyStateText>
-                                선택한 날짜({formatDate(currentDate)})에 진행 중인 스터디가 없습니다.
+                                {formatDate(currentDate)}에 진행 중인 스터디가 없습니다.
                                 다른 날짜를 선택해보세요.
                             </EmptyStateText>
                         ) : filteredStudies.length === 0 ? (
@@ -534,6 +470,26 @@ const StudyClient = () => {
                             ))
                         )}
                     </StudyListContainer>
+
+                    {!isLoading && !error && pagination.totalPages > 1 && (
+                        <PaginationContainer>
+                            <PaginationButton
+                                onClick={() => handlePageChange(Math.max(0, pagination.page - 1))}
+                                disabled={pagination.page === 0}
+                            >
+                                이전
+                            </PaginationButton>
+                            <PaginationInfo>
+                                {pagination.page + 1} / {pagination.totalPages}
+                            </PaginationInfo>
+                            <PaginationButton
+                                onClick={() => handlePageChange(Math.min(pagination.totalPages - 1, pagination.page + 1))}
+                                disabled={pagination.page === pagination.totalPages - 1}
+                            >
+                                다음
+                            </PaginationButton>
+                        </PaginationContainer>
+                    )}
                 </MainContent>
 
                 <FloatingButton
