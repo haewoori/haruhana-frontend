@@ -468,7 +468,7 @@ const StudyClient = () => {
                         colors={colors}
                     />
 
-                    {!isLoading && !error && dateFilteredStudiesCount > 0 && renderFilters()}
+                    {!isLoading && !error && studies.length > 0 && renderFilters()}
 
                     <StudyListContainer>
                         {isLoading ? (
