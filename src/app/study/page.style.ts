@@ -670,41 +670,133 @@ export const ViewDetailsButton = styled.button`
   }
 `;
 
+// 기존 PaginationContainer, PaginationButton, PaginationInfo 대체
+
 export const PaginationContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin: 2rem 0;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 `;
 
-export const PaginationButton = styled.button<{ disabled?: boolean }>`
-  padding: 8px 16px;
-  background-color: ${props => props.disabled ? '#e2e8f0' : '#3b82f6'};
-  color: ${props => props.disabled ? '#94a3b8' : 'white'};
-  border: none;
-  border-radius: 4px;
-  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
-  font-size: 14px;
+export const PaginationButton = styled.button<{
+    disabled?: boolean;
+    active?: boolean;
+    isControl?: boolean;
+}>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: ${props => props.isControl ? '2.5rem' : '2.25rem'};
+  height: 2.25rem;
+  padding: ${props => props.isControl ? '0 0.75rem' : '0'};
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
   
-  &:hover {
-    background-color: ${props => props.disabled ? '#e2e8f0' : '#2563eb'};
-  }
+  ${props => {
+    if (props.disabled) {
+        return `
+        background-color: transparent;
+        color: ${colors.neutral[400]};
+        cursor: not-allowed;
+`;
+    } else if (props.active) {
+        return `
+        background-color: ${colors.primary.main};
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+        transform: translateY(-1px);
+`;
+    } else {
+        return `
+        background-color: ${colors.neutral[100]};
+        color: ${colors.neutral[700]};
+        cursor: pointer;
+
+        &:hover {
+          background-color: ${colors.neutral[200]};
+          transform: translateY(-1px);
+        }
+        
+        &:active {
+          transform: translateY(0);
+        }
+      `;
+    }
+}}
   
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 2px ${colors.primary.light};
   }
   
-  &:not(:last-child) {
-    margin-right: 12px;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease-out, height 0.4s ease-out;
+  }
+  
+  &:hover:not(:disabled)::before {
+    width: 105%;
+    height: 105%;
+  }
+`;
+
+export const PaginationEllipsis = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: ${colors.neutral[500]};
+  font-size: 1rem;
+`;
+
+export const PageNumbersContainer = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+export const PageJumpInput = styled.input`
+  width: 3rem;
+  height: 2.25rem;
+  border: 1px solid ${colors.neutral[300]};
+  border-radius: 0.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  margin: 0 0.5rem;
+  
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary.main};
+    box-shadow: 0 0 0 2px ${colors.primary.light};
   }
 `;
 
 export const PaginationInfo = styled.div`
-  margin: 0 16px;
-  font-size: 14px;
-  color: #4b5563;
+  font-size: 0.875rem;
+  color: ${colors.neutral[500]};
+  margin: 0 0.75rem;
+  display: flex;
+  align-items: center;
+  
+  @media (max-width: 480px) {
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.75rem;
+  }
 `;

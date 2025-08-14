@@ -14,7 +14,11 @@ import {
     MdInfo,
     MdEdit,
     MdCampaign,
-    MdFilterAlt
+    MdFilterAlt,
+    MdKeyboardArrowLeft,
+    MdKeyboardArrowRight,
+    MdFirstPage,
+    MdLastPage
 } from 'react-icons/md';
 
 import { useToast } from '@/hooks/useToast';
@@ -65,6 +69,8 @@ import {
     PaginationContainer,
     PaginationButton,
     PaginationInfo,
+    PageNumbersContainer,
+    PaginationEllipsis,
 } from './page.style';
 
 import {
@@ -257,6 +263,109 @@ const StudyClient = () => {
             )}
         </FilterContainer>
     );
+
+    // 페이지네이션 렌더링 함수 추가
+    const renderPagination = () => {
+        if (isLoading || error || pagination.totalPages <= 1) return null;
+
+        // 표시할 페이지 버튼 수 계산
+        const renderPageButtons = () => {
+            const pageButtons = [];
+            const currentPage = pagination.page;
+            const totalPages = pagination.totalPages;
+
+            // 항상 표시할 최대 페이지 버튼 수
+            const maxPageButtons = 5;
+
+            // 표시할 페이지 범위 계산
+            let startPage = Math.max(0, currentPage - Math.floor(maxPageButtons / 2));
+            let endPage = Math.min(totalPages - 1, startPage + maxPageButtons - 1);
+
+            // 범위 조정
+            if (endPage - startPage + 1 < maxPageButtons) {
+                startPage = Math.max(0, endPage - maxPageButtons + 1);
+            }
+
+            // 첫 페이지 버튼
+            if (startPage > 0) {
+                pageButtons.push(
+                    <PaginationButton
+                        key="first"
+                        onClick={() => handlePageChange(0)}
+                        isControl
+                        aria-label="첫 페이지"
+                    >
+                        <MdFirstPage size={18} />
+                    </PaginationButton>
+                );
+
+                // 생략 표시
+                if (startPage > 1) {
+                    pageButtons.push(<PaginationEllipsis key="ellipsis-start">...</PaginationEllipsis>);
+                }
+            }
+
+            // 페이지 번호 버튼
+            for (let i = startPage; i <= endPage; i++) {
+                pageButtons.push(
+                    <PaginationButton
+                        key={i}
+                        active={i === currentPage}
+                        onClick={() => handlePageChange(i)}
+                        aria-label={`${i + 1} 페이지`}
+                        aria-current={i === currentPage ? 'page' : undefined}
+                    >
+                        {i + 1}
+                    </PaginationButton>
+                );
+            }
+
+            if (endPage < totalPages - 1) {
+                if (endPage < totalPages - 2) {
+                    pageButtons.push(<PaginationEllipsis key="ellipsis-end">...</PaginationEllipsis>);
+                }
+
+                pageButtons.push(
+                    <PaginationButton
+                        key="last"
+                        onClick={() => handlePageChange(totalPages - 1)}
+                        isControl
+                        aria-label="마지막 페이지"
+                    >
+                        <MdLastPage size={18} />
+                    </PaginationButton>
+                );
+            }
+
+            return pageButtons;
+        };
+
+        return (
+            <PaginationContainer>
+                <PaginationButton
+                    onClick={() => handlePageChange(Math.max(0, pagination.page - 1))}
+                    disabled={pagination.page === 0}
+                    isControl
+                    aria-label="이전 페이지"
+                >
+                    <MdKeyboardArrowLeft size={18} />
+                </PaginationButton>
+
+                <PageNumbersContainer>
+                    {renderPageButtons()}
+                </PageNumbersContainer>
+
+                <PaginationButton
+                    onClick={() => handlePageChange(Math.min(pagination.totalPages - 1, pagination.page + 1))}
+                    disabled={pagination.page === pagination.totalPages - 1}
+                    isControl
+                    aria-label="다음 페이지"
+                >
+                    <MdKeyboardArrowRight size={18} />
+                </PaginationButton>
+            </PaginationContainer>
+        );
+    };
 
     // 스터디 신청 함수
     const handleApplyStudy = useCallback((studyId: string) => {
@@ -471,33 +580,15 @@ const StudyClient = () => {
                         )}
                     </StudyListContainer>
 
-                    {!isLoading && !error && pagination.totalPages > 1 && (
-                        <PaginationContainer>
-                            <PaginationButton
-                                onClick={() => handlePageChange(Math.max(0, pagination.page - 1))}
-                                disabled={pagination.page === 0}
-                            >
-                                이전
-                            </PaginationButton>
-                            <PaginationInfo>
-                                {pagination.page + 1} / {pagination.totalPages}
-                            </PaginationInfo>
-                            <PaginationButton
-                                onClick={() => handlePageChange(Math.min(pagination.totalPages - 1, pagination.page + 1))}
-                                disabled={pagination.page === pagination.totalPages - 1}
-                            >
-                                다음
-                            </PaginationButton>
-                        </PaginationContainer>
-                    )}
-                </MainContent>
+                    {!isLoading && !error && pagination.totalPages > 1 && renderPagination()}
 
-                <FloatingButton
-                    onClick={handleCreateStudy}
-                    icon={<MdEdit size={28} />}
-                    ariaLabel="스터디 생성하기"
-                    colors={colors}
-                />
+                    <FloatingButton
+                        onClick={handleCreateStudy}
+                        icon={<MdEdit size={28} />}
+                        ariaLabel="스터디 생성하기"
+                        colors={colors}
+                    />
+                </MainContent>
             </StudyContentWrapper>
 
             <StudyModal
