@@ -264,29 +264,25 @@ const StudyClient = () => {
         </FilterContainer>
     );
 
-    // 페이지네이션 렌더링 함수 추가
+    // 페이지네이션 렌더링 함수 수정
     const renderPagination = () => {
-        if (isLoading || error || pagination.totalPages <= 1) return null;
+        if (isLoading || error) return null;
+        if (pagination.totalPages <= 1 || filteredStudies.length === 0) return null;
 
-        // 표시할 페이지 버튼 수 계산
         const renderPageButtons = () => {
             const pageButtons = [];
             const currentPage = pagination.page;
             const totalPages = pagination.totalPages;
 
-            // 항상 표시할 최대 페이지 버튼 수
             const maxPageButtons = 5;
 
-            // 표시할 페이지 범위 계산
             let startPage = Math.max(0, currentPage - Math.floor(maxPageButtons / 2));
             let endPage = Math.min(totalPages - 1, startPage + maxPageButtons - 1);
 
-            // 범위 조정
             if (endPage - startPage + 1 < maxPageButtons) {
                 startPage = Math.max(0, endPage - maxPageButtons + 1);
             }
 
-            // 첫 페이지 버튼
             if (startPage > 0) {
                 pageButtons.push(
                     <PaginationButton
@@ -299,13 +295,11 @@ const StudyClient = () => {
                     </PaginationButton>
                 );
 
-                // 생략 표시
                 if (startPage > 1) {
                     pageButtons.push(<PaginationEllipsis key="ellipsis-start">...</PaginationEllipsis>);
                 }
             }
 
-            // 페이지 번호 버튼
             for (let i = startPage; i <= endPage; i++) {
                 pageButtons.push(
                     <PaginationButton
@@ -369,9 +363,6 @@ const StudyClient = () => {
 
     // 스터디 신청 함수
     const handleApplyStudy = useCallback((studyId: string) => {
-        // 실제 구현에서는 API 호출
-        // await applyStudy(studyId);
-
         setStudies(prevStudies =>
             prevStudies.map(study =>
                 study.id === studyId ? { ...study, isApplied: true, currentMembers: study.currentMembers + 1 } : study
@@ -580,7 +571,7 @@ const StudyClient = () => {
                         )}
                     </StudyListContainer>
 
-                    {!isLoading && !error && pagination.totalPages > 1 && renderPagination()}
+                    {!isLoading && !error && pagination.totalPages > 1 && filteredStudies.length > 0 && renderPagination()}
 
                     <FloatingButton
                         onClick={handleCreateStudy}
