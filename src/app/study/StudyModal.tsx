@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from 'react';
 import { MdClose } from 'react-icons/md';
+import { StudyStatusType, StudyMember } from '@/types/study/study';
 import {
     ModalContainer,
     ModalWrapper,
@@ -18,11 +19,6 @@ import {
     ApplyButton
 } from './page.style';
 
-interface Member {
-    id: string;
-    name: string;
-}
-
 interface StudyModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -30,8 +26,9 @@ interface StudyModalProps {
         id: string;
         title: string;
         description: string;
-        members: Member[];
+        members: StudyMember[];
         isApplied: boolean;
+        status: StudyStatusType;
     } | null;
     onApply: (studyId: string) => void;
     onCancelApply: (studyId: string) => void;
@@ -59,6 +56,9 @@ const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply }: StudyMod
 
     if (!isOpen || !study) return null;
 
+    // 모집 완료된 스터디에는 신청 불가능
+    const isApplyDisabled = study.status === StudyStatusType.COMPLETED;
+
     return (
         <ModalContainer onClick={handleOutsideClick}>
             <ModalWrapper ref={modalRef}>
@@ -83,17 +83,24 @@ const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply }: StudyMod
                 </ModalBody>
                 <ModalFooter>
                     {study.isApplied ? (
-                        <ApplyButton 
-                            isMine={true} 
+                        <ApplyButton
+                            isMine={true}
                             onClick={() => onCancelApply(study.id)}
                         >
                             신청 취소하기
                         </ApplyButton>
                     ) : (
-                        <ApplyButton 
+                        <ApplyButton
                             onClick={() => onApply(study.id)}
+                            disabled={isApplyDisabled}
+                            style={isApplyDisabled ? {
+                                opacity: 0.6,
+                                cursor: 'not-allowed',
+                                backgroundColor: '#E5E7EB',
+                                color: '#6B7280'
+                            } : undefined}
                         >
-                            신청하기
+                            {isApplyDisabled ? '모집이 완료된 스터디입니다' : '신청하기'}
                         </ApplyButton>
                     )}
                 </ModalFooter>

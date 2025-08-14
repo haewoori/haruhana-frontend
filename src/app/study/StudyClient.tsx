@@ -4,17 +4,17 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import {
-    MdCampaign,
-    MdEdit,
+    MdFilterList,
+    MdAccessTime,
+    MdCheck,
+    MdClear,
     MdPerson,
     MdCalendarToday,
-    MdCheck,
-    MdAccessTime,
     MdClose,
     MdInfo,
-    MdFilterList,
-    MdFilterAlt,
-    MdClear
+    MdEdit,
+    MdCampaign,
+    MdFilterAlt
 } from 'react-icons/md';
 
 import { useToast } from '@/hooks/useToast';
@@ -59,46 +59,28 @@ import {
     StatusIndicator,
     ApplyBadge,
     CardActions,
-    ViewDetailsButton, FilterButton, FilterContainer, FilterBadge, FilterDivider, ClearFiltersButton
+    ViewDetailsButton, FilterButton, FilterContainer, FilterBadge, FilterDivider, ClearFiltersButton,
 } from './page.style';
+
+import {
+    Study,
+    StudyStatusType,
+    StudyFilterStatusType,
+    StudyFilters,
+    StudyType, parseStudyType
+} from '@/types/study/study';
 
 interface Member {
     id: string;
     name: string;
 }
 
-interface Study {
-    id: string;
-    status: 'recruiting' | 'completed' | 'canceled';
-    type: 'certificate' | 'hobby';
-    isOnline: boolean;
-    author: {
-        id: string;
-        name: string;
-        profileImage: string;
-    };
-    title: string;
-    currentMembers: number;
-    totalMembers: number;
-    startDate: string;
-    deadline: string;
-    description: string;
-    members: Member[];
-    isApplied: boolean;
-}
-
-type StudyStatus = 'all' | 'recruiting' | 'completed' | 'canceled';
-
-interface StudyFilters {
-    status: StudyStatus;
-}
-
 // 임시 스터디 데이터
 const MOCK_STUDIES: Study[] = [
     {
         id: '1',
-        status: 'recruiting',
-        type: 'certificate',
+        status: StudyStatusType.RECRUITING,
+        type: StudyType.CERTIFICATE,
         isOnline: true,
         author: {
             id: '101',
@@ -120,8 +102,8 @@ const MOCK_STUDIES: Study[] = [
     },
     {
         id: '2',
-        status: 'recruiting',
-        type: 'hobby',
+        status: StudyStatusType.RECRUITING,
+        type: StudyType.HOBBY,
         isOnline: false,
         author: {
             id: '102',
@@ -145,8 +127,8 @@ const MOCK_STUDIES: Study[] = [
     },
     {
         id: '3',
-        status: 'completed',
-        type: 'certificate',
+        status: StudyStatusType.COMPLETED,
+        type: StudyType.CERTIFICATE,
         isOnline: true,
         author: {
             id: '103',
@@ -156,8 +138,8 @@ const MOCK_STUDIES: Study[] = [
         title: 'SQLD 자격증 스터디',
         currentMembers: 7,
         totalMembers: 7,
-        startDate: '2025-07-01',
-        deadline: '2025-07-20',
+        startDate: '2025-08-01',
+        deadline: '2025-08-20',
         description: 'SQLD 자격증 취득을 위한 스터디입니다. 모집이 완료되었습니다.\n\n매주 월, 수, 금 저녁 9시에 온라인으로 모여 SQL 문제를 풀고 있습니다.\n\n9월 시험을 목표로 준비 중입니다.',
         members: [
             { id: '103', name: '박민수' },
@@ -172,8 +154,8 @@ const MOCK_STUDIES: Study[] = [
     },
     {
         id: '4',
-        status: 'recruiting',
-        type: 'hobby',
+        status: StudyStatusType.RECRUITING,
+        type: StudyType.HOBBY,
         isOnline: true,
         author: {
             id: '104',
@@ -274,7 +256,7 @@ const StudyClient = () => {
     }, [studies, filters, currentDate, isDateInRange]);
 
     // 필터 버튼 클릭 핸들러
-    const handleFilterChange = useCallback((status: StudyStatus) => {
+    const handleFilterChange = useCallback((status: StudyFilterStatusType) => {
         setFilters(prev => ({
             ...prev,
             status: status
@@ -289,7 +271,7 @@ const StudyClient = () => {
     }, []);
 
     // 각 상태별 스터디 개수 계산
-    const getStudyCountByStatus = useCallback((status: StudyStatus): number => {
+    const getStudyCountByStatus = useCallback((status: StudyFilterStatusType): number => {
         const dateFiltered = studies.filter(study => isDateInRange(study, currentDate));
 
         if (status === 'all') {
@@ -298,7 +280,7 @@ const StudyClient = () => {
         return dateFiltered.filter(study => study.status === status).length;
     }, [studies, currentDate, isDateInRange]);
 
-    // 필터 렌더링 함수
+    // 필터 렌더링 함수 - 모집 취소 버튼 제거
     const renderFilters = () => (
         <FilterContainer>
             <FilterButton
@@ -311,30 +293,21 @@ const StudyClient = () => {
             </FilterButton>
 
             <FilterButton
-                active={filters.status === 'recruiting'}
-                onClick={() => handleFilterChange('recruiting')}
+                active={filters.status === StudyStatusType.RECRUITING}
+                onClick={() => handleFilterChange(StudyStatusType.RECRUITING)}
             >
                 <MdAccessTime size={16} />
                 모집 중
-                <FilterBadge>{getStudyCountByStatus('recruiting')}</FilterBadge>
+                <FilterBadge>{getStudyCountByStatus(StudyStatusType.RECRUITING)}</FilterBadge>
             </FilterButton>
 
             <FilterButton
-                active={filters.status === 'completed'}
-                onClick={() => handleFilterChange('completed')}
+                active={filters.status === StudyStatusType.COMPLETED}
+                onClick={() => handleFilterChange(StudyStatusType.COMPLETED)}
             >
                 <MdCheck size={16} />
                 모집 완료
-                <FilterBadge>{getStudyCountByStatus('completed')}</FilterBadge>
-            </FilterButton>
-
-            <FilterButton
-                active={filters.status === 'canceled'}
-                onClick={() => handleFilterChange('canceled')}
-            >
-                <MdClose size={16} />
-                모집 취소
-                <FilterBadge>{getStudyCountByStatus('canceled')}</FilterBadge>
+                <FilterBadge>{getStudyCountByStatus(StudyStatusType.COMPLETED)}</FilterBadge>
             </FilterButton>
 
             {filters.status !== 'all' && (
@@ -403,40 +376,33 @@ const StudyClient = () => {
 
     // 새 스터디 저장 핸들러
     const handleSaveStudy = useCallback((studyData: StudyFormData) => {
-        // 실제 구현에서는 API 호출
-        // await createStudy(studyData);
-
-        // 현재 사용자 정보 (실제로는 Redux 또는 Context에서 가져옴)
+        // 현재 사용자 정보
         const currentUser = {
-            id: '101', // 임시 사용자 ID
+            id: '101',
             name: '김우리',
             profileImage: 'https://randomuser.me/api/portraits/men/32.jpg'
         };
 
-        // 새 스터디 객체 생성
+        const studyType = parseStudyType(studyData.type as string);
+
         const newStudy: Study = {
-            id: Date.now().toString(), // 임시 ID 생성
-            status: 'recruiting',
-            type: studyData.type,
+            id: Date.now().toString(),
+            status: StudyStatusType.RECRUITING,
+            type: studyType,
             isOnline: studyData.isOnline,
             author: currentUser,
             title: studyData.title,
-            currentMembers: 1, // 생성자가 첫 번째 멤버
+            currentMembers: 1,
             totalMembers: studyData.totalMembers,
             startDate: studyData.startDate,
             deadline: studyData.deadline,
             description: studyData.description,
             members: [{ id: currentUser.id, name: currentUser.name }],
-            isApplied: true // 생성자는 자동으로 참여됨
+            isApplied: true
         };
 
-        // 스터디 목록에 추가
         setStudies(prevStudies => [newStudy, ...prevStudies]);
-
-        // 모달 닫기
         setShowCreateModal(false);
-
-        // 성공 메시지 표시
         showToast('스터디가 성공적으로 생성되었습니다.', 'success');
     }, [showToast]);
 
@@ -491,17 +457,16 @@ const StudyClient = () => {
                             </EmptyStateText>
                         ) : (
                             filteredStudies.map(study => (
-                                <StudyCard key={study.id}>
+                                <StudyCard key={study.id} status={study.status}>
                                     <CardHeader>
                                         <TagsContainer>
                                             <StatusTag status={study.status}>
-                                                {study.status === 'recruiting' ? '모집 중' :
-                                                    study.status === 'completed' ? '모집 완료' : '모집 취소'}
+                                                {study.status === StudyStatusType.RECRUITING ? '모집 중' : '모집 완료'}
                                             </StatusTag>
                                         </TagsContainer>
                                         <TagsContainer>
                                             <StudyTypeTag type={study.type}>
-                                                {study.type === 'certificate' ? '자격증' : '취미'}
+                                                {study.type === StudyType.CERTIFICATE ? '자격증' : '취미'}
                                             </StudyTypeTag>
                                             <OnlineTag isOnline={study.isOnline}>
                                                 {study.isOnline ? '온라인' : '오프라인'}
@@ -509,7 +474,7 @@ const StudyClient = () => {
                                         </TagsContainer>
                                     </CardHeader>
 
-                                    <CardBody onClick={() => openStudyModal(study)}>
+                                    <CardBody status={study.status} onClick={() => openStudyModal(study)}>
                                         <ProfileSection>
                                             <ProfileImage
                                                 alt={`${study.author.name} 프로필 사진`}
@@ -537,7 +502,6 @@ const StudyClient = () => {
                                             </Deadline>
                                         </StudyInfoContainer>
                                     </CardBody>
-
                                     <CardFooter>
                                         <StatusIndicator isApplied={study.isApplied} status={study.status}>
                                             <ApplyBadge isApplied={study.isApplied} status={study.status}>
@@ -546,20 +510,15 @@ const StudyClient = () => {
                                                         <MdCheck size={16} style={{ marginRight: '4px' }} />
                                                         신청됨
                                                     </>
-                                                ) : study.status === 'recruiting' ? (
+                                                ) : study.status === StudyStatusType.RECRUITING ? (
                                                     <>
                                                         <MdAccessTime size={16} style={{ marginRight: '4px' }} />
                                                         신청 가능
                                                     </>
-                                                ) : study.status === 'completed' ? (
-                                                    <>
-                                                        <MdClose size={16} style={{ marginRight: '4px' }} />
-                                                        모집 완료
-                                                    </>
                                                 ) : (
                                                     <>
                                                         <MdClose size={16} style={{ marginRight: '4px' }} />
-                                                        모집 취소
+                                                        모집 완료
                                                     </>
                                                 )}
                                             </ApplyBadge>

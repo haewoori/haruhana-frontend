@@ -35,6 +35,7 @@ import { createStudy } from '@/api/study/createStudyApi';
 import { useToast } from '@/hooks/useToast';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { StudyType, studyTypeToApiCategory } from '@/types/study/study';
 
 interface StudyCreateModalProps {
   isOpen: boolean;
@@ -45,12 +46,12 @@ interface StudyCreateModalProps {
 
 export interface StudyFormData {
   title: string;
-  type: 'certificate' | 'hobby';
+  description: string;
+  type: StudyType;
   isOnline: boolean;
+  totalMembers: number;
   startDate: string;
   deadline: string;
-  totalMembers: number;
-  description: string;
 }
 
 const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateModalProps) => {
@@ -61,12 +62,12 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
 
   const initialFormData: StudyFormData = {
     title: '',
-    type: 'certificate',
+    description: '',
+    type: StudyType.CERTIFICATE,
     isOnline: true,
+    totalMembers: 5,
     startDate: getTodayDate(),
     deadline: '',
-    totalMembers: 5,
-    description: '',
   };
 
   const [formData, setFormData] = useState<StudyFormData>(initialFormData);
@@ -141,6 +142,16 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
     setFormData((prev) => ({ ...prev, [name]: value }));
     setTouched((prev) => ({ ...prev, [name]: true }));
     validateField(name, value);
+  };
+
+  // 타입 선택 처리 함수
+  const handleTypeChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      type: value === 'certificate' ? StudyType.CERTIFICATE : StudyType.HOBBY
+    }));
+    setTouched((prev) => ({ ...prev, type: true }));
+    validateField('type', value);
   };
 
   // 단일 필드 유효성 검사
@@ -250,13 +261,12 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
       setIsSubmitting(true);
       onSave(formData);
 
-      const category = formData.type === 'certificate' ? 'CERTIFICATE' : 'HOBBY';
-
+      const apiCategory = studyTypeToApiCategory(formData.type);
       await createStudy(
           formData.title,
           formData.description,
           formData.deadline,
-          category,
+          apiCategory,
           formData.isOnline
       );
 
@@ -341,8 +351,8 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
                         type="radio"
                         id="certificate"
                         name="type"
-                        checked={formData.type === 'certificate'}
-                        onChange={() => handleRadioChange('type', 'certificate')}
+                        checked={formData.type === StudyType.CERTIFICATE}
+                        onChange={() => handleTypeChange('certificate')}
                     />
                     <RadioLabel htmlFor="certificate">자격증</RadioLabel>
                   </RadioOption>
@@ -351,8 +361,8 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
                         type="radio"
                         id="hobby"
                         name="type"
-                        checked={formData.type === 'hobby'}
-                        onChange={() => handleRadioChange('type', 'hobby')}
+                        checked={formData.type === StudyType.HOBBY}
+                        onChange={() => handleTypeChange('hobby')}
                     />
                     <RadioLabel htmlFor="hobby">취미</RadioLabel>
                   </RadioOption>
