@@ -223,7 +223,7 @@ const StudyClient = () => {
         return dateFiltered.filter(study => study.status === status).length;
     }, [studies, currentDate, isDateInRange]);
 
-    // 필터 렌더링 함수 - 모집 취소 버튼 제거
+    // 필터 렌더링 함수
     const renderFilters = () => (
         <FilterContainer>
             <FilterButton
@@ -232,7 +232,6 @@ const StudyClient = () => {
             >
                 <MdFilterList size={16} />
                 전체
-                <FilterBadge>{getStudyCountByStatus('all')}</FilterBadge>
             </FilterButton>
 
             <FilterButton
@@ -241,7 +240,6 @@ const StudyClient = () => {
             >
                 <MdAccessTime size={16} />
                 모집 중
-                <FilterBadge>{getStudyCountByStatus(StudyStatusType.RECRUITING)}</FilterBadge>
             </FilterButton>
 
             <FilterButton
@@ -250,7 +248,6 @@ const StudyClient = () => {
             >
                 <MdCheck size={16} />
                 모집 완료
-                <FilterBadge>{getStudyCountByStatus(StudyStatusType.COMPLETED)}</FilterBadge>
             </FilterButton>
 
             {filters.status !== 'all' && (
@@ -456,7 +453,7 @@ const StudyClient = () => {
                         colors={colors}
                     />
 
-                    {!isLoading && !error && studies.length > 0 && renderFilters()}
+                    {!isLoading && !error && renderFilters()}
 
                     <StudyListContainer>
                         {isLoading ? (
