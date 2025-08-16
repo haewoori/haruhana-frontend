@@ -16,7 +16,7 @@ import {
     MemberListItems,
     MemberItem,
     StudyDescription,
-    ApplyButton
+    ApplyButton,
 } from './page.style';
 
 interface StudyModalProps {
@@ -105,33 +105,6 @@ const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply, onDelete }
                             {isApplyDisabled ? '모집이 완료된 스터디입니다' : '신청하기'}
                         </ApplyButton>
                     )}
-
-                    {/* 본인이 작성한 스터디인 경우에만 삭제 버튼 표시 */}
-                    {/*{study.isMine && (*/}
-                    {/*    <ApplyButton*/}
-                    {/*        style={{*/}
-                    {/*            marginLeft: '8px',*/}
-                    {/*            backgroundColor: '#ef4444',*/}
-                    {/*            color: 'white'*/}
-                    {/*        }}*/}
-                    {/*        onClick={() => onDelete(study.studyCardId)}*/}
-                    {/*    >*/}
-                    {/*        <MdDelete size={16} style={{ marginRight: '4px' }} />*/}
-                    {/*        삭제하기*/}
-                    {/*    </ApplyButton>*/}
-                    {/*)}*/}
-
-                    <ApplyButton
-                        style={{
-                            marginLeft: '8px',
-                            backgroundColor: '#ef4444',
-                            color: 'white'
-                        }}
-                        onClick={() => onDelete(study.studyCardId)}
-                    >
-                        <MdDelete size={16} style={{ marginRight: '4px' }} />
-                        삭제하기
-                    </ApplyButton>
                 </ModalFooter>
             </ModalWrapper>
         </ModalContainer>

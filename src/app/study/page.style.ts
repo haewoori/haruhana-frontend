@@ -670,7 +670,29 @@ export const ViewDetailsButton = styled.button`
   }
 `;
 
-// 기존 PaginationContainer, PaginationButton, PaginationInfo 대체
+export const DeleteButton = styled.button`
+  background-color: #fecaca;
+  color: #b91c1c;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid #fee2e2;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
+  
+  &:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+`;
 
 export const PaginationContainer = styled.div`
   display: flex;

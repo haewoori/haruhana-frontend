@@ -67,12 +67,18 @@ import {
     StatusIndicator,
     ApplyBadge,
     CardActions,
-    ViewDetailsButton, FilterButton, FilterContainer, FilterBadge, FilterDivider, ClearFiltersButton,
+    ViewDetailsButton,
+    FilterButton,
+    FilterContainer,
+    FilterBadge,
+    FilterDivider,
+    ClearFiltersButton,
     PaginationContainer,
     PaginationButton,
     PaginationInfo,
     PageNumbersContainer,
     PaginationEllipsis,
+    DeleteButton, // 추가된 DeleteButton
 } from './page.style';
 
 import {
@@ -578,26 +584,13 @@ const StudyClient = () => {
                                         <CardActions>
                                             <ViewDetailsButton onClick={() => openStudyModal(study)}>
                                                 <MdInfo size={16} />
-                                                상세보기
                                             </ViewDetailsButton>
 
-                                            <ViewDetailsButton
-                                                onClick={(e) => handleDeleteStudy(study.studyCardId, e)}
-                                                style={{ marginLeft: '8px', backgroundColor: '#ef4444', color: 'white' }}
-                                            >
-                                                <MdDelete size={16} />
-                                                삭제
-                                            </ViewDetailsButton>
-
-                                            {/*{study.isMine && (*/}
-                                            {/*    <ViewDetailsButton*/}
-                                            {/*        onClick={(e) => handleDeleteStudy(study.studyCardId, e)}*/}
-                                            {/*        style={{ marginLeft: '8px', backgroundColor: '#ef4444', color: 'white' }}*/}
-                                            {/*    >*/}
-                                            {/*        <MdDelete size={16} />*/}
-                                            {/*        삭제하기*/}
-                                            {/*    </ViewDetailsButton>*/}
-                                            {/*)}*/}
+                                            {study.isMine && (
+                                                <DeleteButton onClick={(e) => handleDeleteStudy(study.studyCardId, e)}>
+                                                    <MdDelete size={16} />
+                                                </DeleteButton>
+                                            )}
                                         </CardActions>
                                     </CardFooter>
                                 </StudyCard>
