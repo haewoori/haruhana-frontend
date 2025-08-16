@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { MdClose } from 'react-icons/md';
+import { MdClose, MdDelete } from 'react-icons/md';
 import { StudyStatusType, StudyMember } from '@/types/study/study';
 import {
     ModalContainer,
@@ -24,17 +24,20 @@ interface StudyModalProps {
     onClose: () => void;
     study: {
         id: string;
+        studyCardId: string; // studyCardId 필드 추가
         title: string;
         description: string;
         members: StudyMember[];
         isApplied: boolean;
         status: StudyStatusType;
+        isMine?: boolean; // isMine 필드 추가
     } | null;
     onApply: (studyId: string) => void;
     onCancelApply: (studyId: string) => void;
+    onDelete: (studyCardId: string, event?: React.MouseEvent) => Promise<void>; // 삭제 핸들러 추가
 }
 
-const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply }: StudyModalProps) => {
+const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply, onDelete }: StudyModalProps) => {
     const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -84,7 +87,6 @@ const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply }: StudyMod
                 <ModalFooter>
                     {study.isApplied ? (
                         <ApplyButton
-                            isMine={true}
                             onClick={() => onCancelApply(study.id)}
                         >
                             신청 취소하기
@@ -103,6 +105,33 @@ const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply }: StudyMod
                             {isApplyDisabled ? '모집이 완료된 스터디입니다' : '신청하기'}
                         </ApplyButton>
                     )}
+
+                    {/* 본인이 작성한 스터디인 경우에만 삭제 버튼 표시 */}
+                    {/*{study.isMine && (*/}
+                    {/*    <ApplyButton*/}
+                    {/*        style={{*/}
+                    {/*            marginLeft: '8px',*/}
+                    {/*            backgroundColor: '#ef4444',*/}
+                    {/*            color: 'white'*/}
+                    {/*        }}*/}
+                    {/*        onClick={() => onDelete(study.studyCardId)}*/}
+                    {/*    >*/}
+                    {/*        <MdDelete size={16} style={{ marginRight: '4px' }} />*/}
+                    {/*        삭제하기*/}
+                    {/*    </ApplyButton>*/}
+                    {/*)}*/}
+
+                    <ApplyButton
+                        style={{
+                            marginLeft: '8px',
+                            backgroundColor: '#ef4444',
+                            color: 'white'
+                        }}
+                        onClick={() => onDelete(study.studyCardId)}
+                    >
+                        <MdDelete size={16} style={{ marginRight: '4px' }} />
+                        삭제하기
+                    </ApplyButton>
                 </ModalFooter>
             </ModalWrapper>
         </ModalContainer>
