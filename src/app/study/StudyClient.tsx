@@ -435,11 +435,6 @@ const StudyClient = () => {
 
     return (
         <StudyContainer>
-            <Header
-                currentDate={currentDate}
-                setCurrentDate={setCurrentDate}
-                colors={colors}
-            />
             <StudyContentWrapper>
                 <MainContent>
                     <PageHeader
