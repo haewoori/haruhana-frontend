@@ -265,6 +265,7 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
       await createStudy(
           formData.title,
           formData.description,
+          formData.totalMembers,
           formData.deadline,
           apiCategory,
           formData.isOnline
