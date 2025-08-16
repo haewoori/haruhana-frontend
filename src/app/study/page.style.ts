@@ -5,6 +5,7 @@ import {
     Footer,
     ButtonContent,
 } from "../page.style";
+import { StudyStatusType } from '@/types/study/study';
 
 export const colors = {
     primary: {
@@ -63,8 +64,7 @@ export const colors = {
     info: '#3B82F6',
     status: {
         recruiting: '#10B981',
-        completed: '#6B7280',
-        canceled: '#EF4444'
+        completed: '#6B7280'
     }
 };
 
@@ -233,15 +233,15 @@ export const StudyListContainer = styled.div`
     margin-bottom: 2rem;
 `;
 
-export const StudyCard = styled.div`
+export const StudyCard = styled.div<{ status: StudyStatusType }>`
     background-color: white;
     border-radius: 0.8rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     position: relative;
     overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
     border: 1px solid ${colors.neutral[200]};
-
+    opacity: ${props => props.status === StudyStatusType.COMPLETED ? 0.75 : 1};
     &:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
@@ -250,43 +250,42 @@ export const StudyCard = styled.div`
 
 export const CardHeader = styled.div`
     padding: 1rem 1.5rem;
-    display: flex;
+  display: flex;
     justify-content: space-between;
-    align-items: center;
+  align-items: center;
     border-bottom: 1px solid ${colors.neutral[100]};
 `;
 
-export const CardBody = styled.div`
+export const CardBody = styled.div<{ status?: StudyStatusType }>`
     padding: 1.5rem;
     cursor: pointer;
-`;
+    position: relative;
+      `;
 
 export const CardFooter = styled.div`
     padding: 1rem 1.5rem;
     border-top: 1px solid ${colors.neutral[100]};
-    display: flex;
+  display: flex;
     justify-content: space-between;
-    align-items: center;
+  align-items: center;
 `;
 
-export const StatusTag = styled.span<{ status: 'recruiting' | 'completed' | 'canceled' }>`
+export const StatusTag = styled.span<{ status: StudyStatusType }>`
     font-size: 0.75rem;
     font-weight: 600;
     padding: 0.25rem 0.75rem;
     border-radius: 9999px;
     background-color: ${props => {
     switch(props.status) {
-        case 'recruiting': return colors.status.recruiting + '20';
-        case 'completed': return colors.status.completed + '20';
-        case 'canceled': return colors.status.canceled + '20';
+        case StudyStatusType.RECRUITING: return colors.status.recruiting + '20';
+        case StudyStatusType.COMPLETED: return colors.status.completed + '20';
         default: return colors.neutral[200];
     }
 }};
     color: ${props => {
     switch(props.status) {
-        case 'recruiting': return colors.status.recruiting;
-        case 'completed': return colors.status.completed;
-        case 'canceled': return colors.status.canceled;
+        case StudyStatusType.RECRUITING: return colors.status.recruiting;
+        case StudyStatusType.COMPLETED: return colors.status.completed;
         default: return colors.neutral[600];
     }
 }};
@@ -343,7 +342,7 @@ export const UserName = styled.p`
     color: ${colors.neutral[800]};
 `;
 
-export const StudyTitle = styled.h3`
+export const StudyTitle = styled.h3<{ status?: StudyStatusType }>`
     font-size: 1.25rem;
     font-weight: 700;
     margin-bottom: 0.7rem;
@@ -608,13 +607,13 @@ export const ModalFooter = styled.div`
     z-index: 1;
 `;
 
-export const StatusIndicator = styled.div<{ isApplied: boolean; status: 'recruiting' | 'completed' | 'canceled' }>`
+export const StatusIndicator = styled.div<{ isApplied: boolean; status: StudyStatusType }>`
   display: flex;
   align-items: center;
   gap: 0.5rem;
 `;
 
-export const ApplyBadge = styled.div<{ isApplied: boolean; status: 'recruiting' | 'completed' | 'canceled' }>`
+export const ApplyBadge = styled.div<{ isApplied: boolean; status: StudyStatusType }>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -631,23 +630,17 @@ export const ApplyBadge = styled.div<{ isApplied: boolean; status: 'recruiting' 
         color: ${colors.primary.main};
         border: 1px solid ${colors.primary.main}20;
       `;
-    } else if (props.status === 'recruiting') {
+    } else if (props.status === StudyStatusType.RECRUITING) {
         return `
         background-color: ${colors.status.recruiting}10;
         color: ${colors.status.recruiting};
         border: 1px solid ${colors.status.recruiting}20;
       `;
-    } else if (props.status === 'completed') {
+    } else {
         return `
         background-color: ${colors.neutral[200]};
         color: ${colors.neutral[600]};
         border: 1px solid ${colors.neutral[300]};
-      `;
-    } else {
-        return `
-        background-color: ${colors.status.canceled}10;
-        color: ${colors.status.canceled};
-        border: 1px solid ${colors.status.canceled}20;
       `;
     }
 }}
@@ -674,5 +667,136 @@ export const ViewDetailsButton = styled.button`
   
   &:hover {
     background-color: ${colors.neutral[200]};
+  }
+`;
+
+// 기존 PaginationContainer, PaginationButton, PaginationInfo 대체
+
+export const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2rem 0;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+`;
+
+export const PaginationButton = styled.button<{
+    disabled?: boolean;
+    active?: boolean;
+    isControl?: boolean;
+}>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: ${props => props.isControl ? '2.5rem' : '2.25rem'};
+  height: 2.25rem;
+  padding: ${props => props.isControl ? '0 0.75rem' : '0'};
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  
+  ${props => {
+    if (props.disabled) {
+        return `
+        background-color: transparent;
+        color: ${colors.neutral[400]};
+        cursor: not-allowed;
+`;
+    } else if (props.active) {
+        return `
+        background-color: ${colors.primary.main};
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+        transform: translateY(-1px);
+`;
+    } else {
+        return `
+        background-color: ${colors.neutral[100]};
+        color: ${colors.neutral[700]};
+        cursor: pointer;
+
+        &:hover {
+          background-color: ${colors.neutral[200]};
+          transform: translateY(-1px);
+        }
+        
+        &:active {
+          transform: translateY(0);
+        }
+      `;
+    }
+}}
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px ${colors.primary.light};
+  }
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease-out, height 0.4s ease-out;
+  }
+  
+  &:hover:not(:disabled)::before {
+    width: 105%;
+    height: 105%;
+  }
+`;
+
+export const PaginationEllipsis = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: ${colors.neutral[500]};
+  font-size: 1rem;
+`;
+
+export const PageNumbersContainer = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+export const PageJumpInput = styled.input`
+  width: 3rem;
+  height: 2.25rem;
+  border: 1px solid ${colors.neutral[300]};
+  border-radius: 0.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  margin: 0 0.5rem;
+  
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary.main};
+    box-shadow: 0 0 0 2px ${colors.primary.light};
+  }
+`;
+
+export const PaginationInfo = styled.div`
+  font-size: 0.875rem;
+  color: ${colors.neutral[500]};
+  margin: 0 0.75rem;
+  display: flex;
+  align-items: center;
+  
+  @media (max-width: 480px) {
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.75rem;
   }
 `;
