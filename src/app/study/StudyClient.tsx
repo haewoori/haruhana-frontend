@@ -521,7 +521,7 @@ const StudyClient = () => {
                                             <Deadline>
                                                 <MdCalendarToday size={16} color="#6B7280" />
                                                 <DeadlineValue>
-                                                    {new Date(study.deadline).toLocaleDateString()} 마감
+                                                    모집 마감일 {new Date(study.deadline).toLocaleDateString()}
                                                 </DeadlineValue>
                                             </Deadline>
                                         </StudyInfoContainer>
