@@ -198,7 +198,7 @@ const StudyClient = () => {
         }));
     }, []);
 
-    // 페이지 변경 핸들러 추가
+    // 페이지 변경 핸들러
     const handlePageChange = (newPage: number) => {
         setPagination(prev => ({
             ...prev,
@@ -262,7 +262,7 @@ const StudyClient = () => {
         </FilterContainer>
     );
 
-    // 페이지네이션 렌더링 함수 수정
+    // 페이지네이션 렌더링 함수
     const renderPagination = () => {
         if (isLoading || error) return null;
         if (pagination.totalPages <= 1 || filteredStudies.length === 0) return null;
@@ -473,7 +473,11 @@ const StudyClient = () => {
                             </EmptyStateText>
                         ) : (
                             filteredStudies.map(study => (
-                                <StudyCard key={study.id} status={study.status}>
+                                <StudyCard
+                                    key={study.id}
+                                    status={study.status}
+                                    data-study-card-id={study.studyCardId}
+                                >
                                     <CardHeader>
                                         <TagsContainer>
                                             <StatusTag status={study.status}>
@@ -500,7 +504,6 @@ const StudyClient = () => {
                                                 <UserName>{study.author.name}</UserName>
                                             </UserInfo>
                                         </ProfileSection>
-
                                         <StudyTitle>{study.title}</StudyTitle>
                                         <StudyInfoContainer>
                                             <MemberCount>
@@ -509,7 +512,6 @@ const StudyClient = () => {
                                                     {study.currentMembers}/{study.totalMembers}
                                                 </DeadlineValue>
                                             </MemberCount>
-
                                             <Deadline>
                                                 <MdCalendarToday size={16} color="#6B7280" />
                                                 <DeadlineValue>

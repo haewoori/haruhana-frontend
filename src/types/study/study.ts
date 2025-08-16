@@ -88,6 +88,7 @@ export interface StudyAuthor {
 // 스터디 인터페이스
 export interface Study {
   id: string;
+  studyCardId: string;
   status: StudyStatusType;
   type: StudyType;
   isOnline: boolean;
