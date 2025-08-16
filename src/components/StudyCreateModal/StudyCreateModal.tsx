@@ -260,18 +260,6 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
     try {
       setIsSubmitting(true);
       onSave(formData);
-
-      const apiCategory = studyTypeToApiCategory(formData.type);
-      await createStudy(
-          formData.title,
-          formData.description,
-          formData.totalMembers,
-          formData.deadline,
-          apiCategory,
-          formData.isOnline
-      );
-
-      showToast?.('스터디가 성공적으로 등록되었습니다', 'success');
       onSuccess?.();
       resetForm();
       onClose();

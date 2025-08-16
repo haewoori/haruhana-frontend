@@ -78,8 +78,9 @@ import {
     StudyStatusType,
     StudyFilterStatusType,
     StudyFilters,
-    StudyType, parseStudyType
+    StudyType, parseStudyType, studyTypeToApiCategory
 } from '@/types/study/study';
+import {createStudy} from "@/api/study/createStudyApi";
 
 interface Member {
     id: string;
@@ -118,43 +119,43 @@ const StudyClient = () => {
         }
     }, [isAuthenticated, accessToken, router]);
 
+    const fetchStudies = async () => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const params = {
+                page: pagination.page,
+                size: pagination.size,
+                sort: "createdTime,desc"
+            };
+
+            if (filters.status !== 'all') {
+                params.available = filters.status === StudyStatusType.RECRUITING;
+            }
+
+            const response = await getStudies(params);
+            const adaptedStudies = response.result.content.map(adaptStudyCardToStudy);
+
+            setPagination({
+                page: response.result.pageable.pageNumber,
+                size: response.result.pageable.pageSize,
+                totalPages: response.result.totalPages,
+                totalElements: response.result.totalElements
+            });
+
+            setStudies(adaptedStudies);
+            setIsLoading(false);
+        } catch (err) {
+            console.error('스터디 데이터를 불러오는 중 오류가 발생했습니다:', err);
+            setError('스터디 데이터를 불러오는 중 오류가 발생했습니다. 새로고침 해주세요.');
+            setStudies([]);
+            setIsLoading(false);
+        }
+    };
+
     // 스터디 데이터 로드
     useEffect(() => {
-        const fetchStudies = async () => {
-            setIsLoading(true);
-            setError(null);
-
-            try {
-                const params = {
-                    page: pagination.page,
-                    size: pagination.size,
-                    sort: "createdTime,desc"
-                };
-
-                if (filters.status !== 'all') {
-                    params.available = filters.status === StudyStatusType.RECRUITING;
-                }
-
-                const response = await getStudies(params);
-                const adaptedStudies = response.result.content.map(adaptStudyCardToStudy);
-
-                setPagination({
-                    page: response.result.pageable.pageNumber,
-                    size: response.result.pageable.pageSize,
-                    totalPages: response.result.totalPages,
-                    totalElements: response.result.totalElements
-                });
-
-                setStudies(adaptedStudies);
-                setIsLoading(false);
-            } catch (err) {
-                console.error('스터디 데이터를 불러오는 중 오류가 발생했습니다:', err);
-                setError('스터디 데이터를 불러오는 중 오류가 발생했습니다. 새로고침 해주세요.');
-                setStudies([]);
-                setIsLoading(false);
-            }
-        };
-
         fetchStudies();
     }, [filters.status, pagination.page, pagination.size]);
 
@@ -411,35 +412,22 @@ const StudyClient = () => {
     }, []);
 
     // 새 스터디 저장 핸들러
-    const handleSaveStudy = useCallback((studyData: StudyFormData) => {
-        // 현재 사용자 정보
-        const currentUser = {
-            id: '101',
-            name: '김우리',
-            profileImage: 'https://randomuser.me/api/portraits/men/32.jpg'
-        };
+    const handleSaveStudy = useCallback(async (studyData: StudyFormData) => {
+        const apiCategory = studyTypeToApiCategory(studyData.type);
+        await createStudy(
+            studyData.title,
+            studyData.description,
+            studyData.totalMembers,
+            studyData.deadline,
+            apiCategory,
+            studyData.isOnline
+        );
 
-        const studyType = parseStudyType(studyData.type as string);
-
-        const newStudy: Study = {
-            id: Date.now().toString(),
-            status: StudyStatusType.RECRUITING,
-            type: studyType,
-            isOnline: studyData.isOnline,
-            author: currentUser,
-            title: studyData.title,
-            currentMembers: 1,
-            totalMembers: studyData.totalMembers,
-            startDate: studyData.startDate,
-            deadline: studyData.deadline,
-            description: studyData.description,
-            members: [{ id: currentUser.id, name: currentUser.name }],
-            isApplied: true
-        };
-
-        setStudies(prevStudies => [newStudy, ...prevStudies]);
         setShowCreateModal(false);
         showToast('스터디가 성공적으로 생성되었습니다.', 'success');
+
+        fetchStudies();
+        router.refresh();
     }, [showToast]);
 
     // 날짜에 따른 필터링된 스터디 수 확인
