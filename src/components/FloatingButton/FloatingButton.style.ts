@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { Colors } from "../Header/Header.style";
+import { Colors } from '@/components/types';
 
 export const FloatingButtonContainer = styled.button<{ colors: Colors }>`
     background: ${props => props.colors.primary.gradient};

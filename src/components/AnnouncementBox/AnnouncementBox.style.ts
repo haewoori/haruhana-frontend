@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { Colors } from "../Header/Header.style";
+import { Colors } from '@/components/types';
 
 export const AnnouncementContainer = styled.div<{ colors: Colors }>`
     background-color: ${props => props.colors.primary.light};

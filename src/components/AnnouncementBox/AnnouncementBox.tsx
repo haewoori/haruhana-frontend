@@ -1,6 +1,6 @@
 import React from 'react';
 import { MdCampaign } from 'react-icons/md';
-import { Colors } from '../Header/Header.style';
+import { Colors } from '@/components/types';
 import {
     AnnouncementContainer,
     AnnouncementIcon,

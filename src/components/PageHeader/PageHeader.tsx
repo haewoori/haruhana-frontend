@@ -1,5 +1,5 @@
 import React from 'react';
-import { Colors } from '../Header/Header.style';
+import { Colors } from '@/components/types';
 import {
     HeaderContainer,
     GroupTitle,

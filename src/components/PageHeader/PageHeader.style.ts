@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { Colors } from "../Header/Header.style";
+import { Colors } from '@/components/types';
 
 export const HeaderContainer = styled.div`
     margin-bottom: 1.5rem;
