@@ -30,7 +30,7 @@ import { formatDate } from '@/utils/dateUtils';
 import { getStudies } from '@/api/study/getStudyApi';
 import { adaptStudyCardToStudy } from '@/utils/studyAdapter';
 import { deleteStudy } from '@/api/study/deleteStudyApi';
-import { cancelStudy } from '@/api/study/cancelStudyApi';
+import { applyStudy } from '@/api/study/applyStudyApi';
 
 import PageHeader from '@/components/PageHeader/PageHeader';
 import AnnouncementBox from '@/components/AnnouncementBox/AnnouncementBox';
@@ -89,6 +89,7 @@ import {
     StudyType, parseStudyType, studyTypeToApiCategory
 } from '@/types/study/study';
 import {createStudy} from "@/api/study/createStudyApi";
+import {cancelStudy} from "@/api/study/cancelStudyApi";
 
 interface Member {
     id: string;
@@ -368,16 +369,43 @@ const StudyClient = () => {
     };
 
     // 스터디 신청 함수
-    const handleApplyStudy = useCallback((studyId: string) => {
-        setStudies(prevStudies =>
-            prevStudies.map(study =>
-                study.id === studyId ? { ...study, isApplied: true, currentMembers: study.currentMembers + 1 } : study
-            )
-        );
+    const handleApplyStudy = useCallback(async (studyId: string) => {
+        try {
+            setIsLoading(true);
 
-        setShowStudyModal(false);
-        showToast('스터디 신청이 완료되었습니다.', 'success');
-    }, [showToast]);
+            const studyCardId = studies.find(s => s.id === studyId)?.studyCardId;
+            if (!studyCardId) {
+                throw new Error('스터디 카드 ID를 찾을 수 없습니다.');
+            }
+
+            const response = await applyStudy(studyCardId);
+
+            if (response.success) {
+                setStudies(prevStudies =>
+                    prevStudies.map(study =>
+                        study.id === studyId ? {
+                            ...study,
+                            isApplied: true,
+                            participated: true,
+                            currentMembers: study.currentMembers + 1
+                        } : study
+                    )
+                );
+
+                setShowStudyModal(false);
+                showToast('스터디 신청이 완료되었습니다.', 'success');
+
+                await fetchStudies();
+            } else {
+                showToast('스터디 신청에 실패했습니다.', 'error');
+            }
+        } catch (error) {
+            console.error('스터디 신청 중 오류 발생:', error);
+            showToast('스터디 신청 중 오류가 발생했습니다.', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [showToast, studies, fetchStudies]);
 
     // 스터디 신청 취소 함수
     const handleCancelApply = useCallback(async (studyId: string) => {
