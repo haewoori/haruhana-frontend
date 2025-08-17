@@ -18,7 +18,8 @@ import {
     MdKeyboardArrowLeft,
     MdKeyboardArrowRight,
     MdFirstPage,
-    MdLastPage
+    MdLastPage,
+    MdDelete
 } from 'react-icons/md';
 
 import { useToast } from '@/hooks/useToast';
@@ -28,6 +29,7 @@ import StudyCreateModal, { StudyFormData } from '@/components/StudyCreateModal/S
 import { formatDate } from '@/utils/dateUtils';
 import { getStudies } from '@/api/study/getStudyApi';
 import { adaptStudyCardToStudy } from '@/utils/studyAdapter';
+import { deleteStudy } from '@/api/study/deleteStudyApi';
 
 import Header from '@/components/Header/Header';
 import PageHeader from '@/components/PageHeader/PageHeader';
@@ -65,12 +67,18 @@ import {
     StatusIndicator,
     ApplyBadge,
     CardActions,
-    ViewDetailsButton, FilterButton, FilterContainer, FilterBadge, FilterDivider, ClearFiltersButton,
+    ViewDetailsButton,
+    FilterButton,
+    FilterContainer,
+    FilterBadge,
+    FilterDivider,
+    ClearFiltersButton,
     PaginationContainer,
     PaginationButton,
     PaginationInfo,
     PageNumbersContainer,
     PaginationEllipsis,
+    DeleteButton, // 추가된 DeleteButton
 } from './page.style';
 
 import {
@@ -398,6 +406,38 @@ const StudyClient = () => {
         setSelectedStudy(null);
     }, []);
 
+    // 스터디 삭제 핸들러 함수
+    const handleDeleteStudy = useCallback(async (studyCardId: string, event?: React.MouseEvent) => {
+        if (event) {
+            event.stopPropagation();
+        }
+
+        if (!window.confirm('정말로 이 스터디를 삭제하시겠습니까?')) {
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            await deleteStudy(studyCardId);
+            showToast('스터디가 성공적으로 삭제되었습니다.', 'success');
+
+            setStudies(prevStudies =>
+                prevStudies.filter(study => study.studyCardId !== studyCardId)
+            );
+
+            if (selectedStudy && selectedStudy.studyCardId === studyCardId) {
+                closeStudyModal();
+            }
+
+            await fetchStudies();
+        } catch (error) {
+            console.error('스터디 삭제 중 오류 발생:', error);
+            showToast('스터디 삭제 중 오류가 발생했습니다.', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [showToast, closeStudyModal, selectedStudy, fetchStudies]);
+
     // 새 스터디 생성 모달 열기
     const handleCreateStudy = useCallback(() => {
         setShowCreateModal(true);
@@ -544,8 +584,13 @@ const StudyClient = () => {
                                         <CardActions>
                                             <ViewDetailsButton onClick={() => openStudyModal(study)}>
                                                 <MdInfo size={16} />
-                                                상세보기
                                             </ViewDetailsButton>
+
+                                            {study.isMine && (
+                                                <DeleteButton onClick={(e) => handleDeleteStudy(study.studyCardId, e)}>
+                                                    <MdDelete size={16} />
+                                                </DeleteButton>
+                                            )}
                                         </CardActions>
                                     </CardFooter>
                                 </StudyCard>
@@ -570,6 +615,7 @@ const StudyClient = () => {
                 study={selectedStudy}
                 onApply={handleApplyStudy}
                 onCancelApply={handleCancelApply}
+                onDelete={handleDeleteStudy}
             />
 
             <StudyCreateModal
