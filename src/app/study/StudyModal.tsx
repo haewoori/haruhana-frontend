@@ -76,7 +76,15 @@ const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply, onDelete }
                     </MemberList>
                 </ModalBody>
                 <ModalFooter>
-                    {study.participated ? (
+                    {study.mine && (
+                        <ApplyButton
+                            onClick={(e) => onDelete(study.studyCardId, e)}
+                            style={{ backgroundColor: '#F87171', color: '#FFFFFF' }}
+                        >
+                            삭제하기
+                        </ApplyButton>
+                    )}
+                    {!study.mine && (study.participated ? (
                         <ApplyButton
                             onClick={() => onCancelApply(study.id)}
                         >
@@ -95,7 +103,7 @@ const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply, onDelete }
                         >
                             {isApplyDisabled ? '모집이 완료된 스터디입니다' : '신청하기'}
                         </ApplyButton>
-                    )}
+                    ))}
                 </ModalFooter>
             </ModalWrapper>
         </ModalContainer>
