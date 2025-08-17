@@ -85,6 +85,13 @@ interface Member {
     name: string;
 }
 
+interface StudyParams {
+    page: number;
+    size: number;
+    sort: string;
+    available?: boolean;
+}
+
 const StudyClient = () => {
     const router = useRouter();
     const { accessToken, isAuthenticated } = useSelector((state: any) => state.auth);
@@ -122,7 +129,7 @@ const StudyClient = () => {
         setError(null);
 
         try {
-            const params = {
+            const params: StudyParams = {
                 page: pagination.page,
                 size: pagination.size,
                 sort: "createdTime,desc"
