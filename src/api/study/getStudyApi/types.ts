@@ -34,14 +34,16 @@ export interface StudyCardItem {
   title: string;
   content: string;
   userProfile: UserProfile;
-  type: StudyType;
+  maxParticipants: number;    // 최대 참여 인원
+  category: StudyType;        // 스터디 타입 (자격증, 취미)
   createdTime: string;
   updatedTime: string;
   dueDate: string;
   online: boolean;
-  available: boolean;
-  registered: boolean;
-  participated: boolean;
+  available: boolean;         // 모집 중(true) / 모집 완료(false)
+  participantIds: string[];   // 참여자 ID 목록
+  participantNames: string[]; // 참여자 이름 목록
+  participated: boolean;      // 참여 여부
   mine: boolean;
 }
 

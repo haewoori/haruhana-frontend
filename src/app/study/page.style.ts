@@ -5,7 +5,7 @@ import {
     Footer,
     ButtonContent,
 } from "../page.style";
-import { StudyStatusType } from '@/types/study/study';
+import {StudyStatusType, StudyType} from '@/types/study/study';
 
 export const colors = {
     primary: {
@@ -296,13 +296,13 @@ export const TagsContainer = styled.div`
     gap: 0.5rem;
 `;
 
-export const StudyTypeTag = styled.span<{ type: 'certificate' | 'hobby' }>`
+export const StudyTypeTag = styled.span<{ type: StudyType }>`
     font-size: 0.75rem;
     font-weight: 500;
     padding: 0.25rem 0.75rem;
     border-radius: 9999px;
-    background-color: ${props => props.type === 'certificate' ? colors.secondary.light : colors.cardColors.purple.color + '20'};
-    color: ${props => props.type === 'certificate' ? colors.secondary.dark : colors.cardColors.purple.color};
+    background-color: ${props => props.type === StudyType.CERTIFICATE ? colors.secondary.light : colors.cardColors.purple.color + '20'};
+    color: ${props => props.type === StudyType.CERTIFICATE ? colors.secondary.dark : colors.cardColors.purple.color};
 `;
 
 export const OnlineTag = styled.span<{ isOnline: boolean }>`
@@ -430,7 +430,7 @@ export const MemberItem = styled.div`
     color: ${colors.neutral[700]};
 `;
 
-export const StudyDescription = styled.p`
+export const StudyContent = styled.p`
     font-size: 0.9375rem;
     line-height: 1.6;
     color: ${colors.neutral[700]};

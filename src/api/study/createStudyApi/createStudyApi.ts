@@ -2,6 +2,7 @@
 
 import createServerInstance from '../../axiosServerInstance';
 import { CreateStudyRequest, CreateStudyResponse } from './types';
+import {StudyType} from "@/types/study/study";
 
 /**
  * 서버에서 새 스터디 생성 API
@@ -18,7 +19,7 @@ export const createStudyServer = async (
   content: string,
   maxParticipants: number,
   dueDate: string,
-  category: 'CERTIFICATE' | 'HOBBY',
+  category: StudyType,
   isOnline: boolean
 ): Promise<void> => {
   const requestData: CreateStudyRequest = {

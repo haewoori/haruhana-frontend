@@ -15,7 +15,7 @@ import {
     MemberListTitle,
     MemberListItems,
     MemberItem,
-    StudyDescription,
+    StudyContent,
     ApplyButton,
 } from './page.style';
 
@@ -25,7 +25,7 @@ interface StudyModalProps {
     study: Study | null;
     onApply: (studyId: string) => void;
     onCancelApply: (studyId: string) => void;
-    onDelete: (studyCardId: string, event?: React.MouseEvent) => Promise<void>; // 삭제 핸들러 추가
+    onDelete: (studyCardId: string, event?: React.MouseEvent) => Promise<void>;
 }
 
 const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply, onDelete }: StudyModalProps) => {
@@ -63,7 +63,7 @@ const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply, onDelete }
                     </ModalCloseButton>
                 </ModalHeader>
                 <ModalBody>
-                    <StudyDescription>{study.description}</StudyDescription>
+                    <StudyContent>{study.content}</StudyContent>
                     <MemberList>
                         <MemberListTitle>모집된 회원 ({study.members.length}명)</MemberListTitle>
                         <MemberListItems>
