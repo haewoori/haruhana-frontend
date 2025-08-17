@@ -30,8 +30,8 @@ import { formatDate } from '@/utils/dateUtils';
 import { getStudies } from '@/api/study/getStudyApi';
 import { adaptStudyCardToStudy } from '@/utils/studyAdapter';
 import { deleteStudy } from '@/api/study/deleteStudyApi';
+import { cancelStudy } from '@/api/study/cancelStudyApi';
 
-import Header from '@/components/Header/Header';
 import PageHeader from '@/components/PageHeader/PageHeader';
 import AnnouncementBox from '@/components/AnnouncementBox/AnnouncementBox';
 import FloatingButton from '@/components/FloatingButton/FloatingButton';
@@ -380,19 +380,34 @@ const StudyClient = () => {
     }, [showToast]);
 
     // 스터디 신청 취소 함수
-    const handleCancelApply = useCallback((studyId: string) => {
-        // 실제 구현에서는 API 호출
-        // await cancelStudyApplication(studyId);
+    const handleCancelApply = useCallback(async (studyId: string) => {
+        try {
+            setIsLoading(true);
 
-        setStudies(prevStudies =>
-            prevStudies.map(study =>
-                study.id === studyId ? { ...study, isApplied: false, currentMembers: study.currentMembers - 1 } : study
-            )
-        );
+            const studyCardId = studies.find(s => s.id === studyId)?.studyCardId;
+            if (!studyCardId) {
+                throw new Error('스터디 카드 ID를 찾을 수 없습니다.');
+            }
 
-        setShowStudyModal(false);
-        showToast('스터디 신청이 취소되었습니다.', 'info');
-    }, [showToast]);
+            await cancelStudy(studyCardId);
+
+            setStudies(prevStudies =>
+                prevStudies.map(study =>
+                    study.id === studyId ? { ...study, participated: false, currentMembers: study.currentMembers - 1 } : study
+                )
+            );
+
+            setShowStudyModal(false);
+            showToast('스터디 신청이 취소되었습니다.', 'info');
+
+            await fetchStudies();
+        } catch (error) {
+            console.error('스터디 신청 취소 중 오류 발생:', error);
+            showToast('스터디 신청 취소 중 오류가 발생했습니다.', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [showToast, studies, fetchStudies]);
 
     // 스터디 카드 클릭 시 모달 열기
     const openStudyModal = useCallback((study: Study) => {
@@ -563,7 +578,7 @@ const StudyClient = () => {
                                     <CardFooter>
                                         <StatusIndicator isApplied={study.isApplied} status={study.status}>
                                             <ApplyBadge isApplied={study.isApplied} status={study.status}>
-                                                {study.isApplied ? (
+                                                {study.participated ? (
                                                     <>
                                                         <MdCheck size={16} style={{ marginRight: '4px' }} />
                                                         신청됨
@@ -586,7 +601,7 @@ const StudyClient = () => {
                                                 <MdInfo size={16} />
                                             </ViewDetailsButton>
 
-                                            {study.isMine && (
+                                            {study.mine && (
                                                 <DeleteButton onClick={(e) => handleDeleteStudy(study.studyCardId, e)}>
                                                     <MdDelete size={16} />
                                                 </DeleteButton>

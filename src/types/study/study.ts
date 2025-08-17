@@ -94,13 +94,15 @@ export interface Study {
   isOnline: boolean;
   author: StudyAuthor;
   title: string;
+  description: string;
+  mine: boolean;
   currentMembers: number;
   totalMembers: number;
   startDate: string;
   deadline: string;
-  description: string;
   members: StudyMember[];
   isApplied: boolean;
+  participated: boolean;
 }
 
 // 스터디 필터 인터페이스
