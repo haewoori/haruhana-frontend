@@ -81,7 +81,7 @@ const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply, onDelete }
                             onClick={(e) => onDelete(study.studyCardId, e)}
                             style={{ backgroundColor: '#F87171', color: '#FFFFFF' }}
                         >
-                            삭제하기
+                            스터디 모집 취소
                         </ApplyButton>
                     )}
                     {!study.mine && (study.participated ? (
