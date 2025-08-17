@@ -10,23 +10,28 @@ export const adaptStudyCardToStudy = (studyCard: StudyCardItem): Study => {
   return {
     id: studyCard.studyCardId,
     studyCardId: studyCard.studyCardId,
-    status: studyCard.available ? StudyStatusType.RECRUITING : StudyStatusType.COMPLETED,
-    type: studyCard.type,
-    isOnline: studyCard.online,
-    author: {
-      id: studyCard.userProfile.username, // 실제 id가 없으므로 username을 id로 사용
-      name: studyCard.userProfile.username,
-      profileImage: studyCard.userProfile.profileImageUrl || 'https://randomuser.me/api/portraits/men/32.jpg' // 기본 이미지 제공
-    },
     title: studyCard.title,
-    description: studyCard.content,
-    mine: studyCard.mine,
-    currentMembers: 1, // API에서 제공하지 않음, 기본값 설정
-    totalMembers: 10, // API에서 제공하지 않음, 기본값 설정
-    startDate: new Date().toISOString().split('T')[0], // API에서 제공하지 않음, 현재 날짜로 설정
+    content: studyCard.content,
+    author: {
+      id: studyCard.userProfile.username, // id 넘어오지 않고있음. 따라서 username을 id로 사용
+      name: studyCard.userProfile.username,
+      profileImage: studyCard.userProfile.profileImageUrl || 'https://placehold.co/600x400?text=user'
+    },
+    totalMembers: studyCard.maxParticipants,
+    startDate: studyCard.createdTime.split('T')[0],
+    type: studyCard.category,
     deadline: studyCard.dueDate,
-    members: [{ id: studyCard.userProfile.username, name: studyCard.userProfile.username }], // 작성자만 멤버로 추가
-    isApplied: studyCard.registered,
-    participated: studyCard.participated
+    isOnline: studyCard.online,
+    status: studyCard.available ? StudyStatusType.RECRUITING : StudyStatusType.COMPLETED,
+    participantIds: studyCard.participantIds || [],
+    participantNames: studyCard.participantNames || [],
+    participated: studyCard.participated,
+    mine: studyCard.mine,
+    currentMembers: studyCard.participantNames.length,
+
+    members: studyCard.participantIds.map((id, index) => ({
+        id,
+        name: studyCard.participantNames[index] || '알 수 없는 사용자',
+    })),
   };
 };

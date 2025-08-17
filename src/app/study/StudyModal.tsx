@@ -15,7 +15,7 @@ import {
     MemberListTitle,
     MemberListItems,
     MemberItem,
-    StudyDescription,
+    StudyContent,
     ApplyButton,
 } from './page.style';
 
@@ -25,7 +25,7 @@ interface StudyModalProps {
     study: Study | null;
     onApply: (studyId: string) => void;
     onCancelApply: (studyId: string) => void;
-    onDelete: (studyCardId: string, event?: React.MouseEvent) => Promise<void>; // 삭제 핸들러 추가
+    onDelete: (studyCardId: string, event?: React.MouseEvent) => Promise<void>;
 }
 
 const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply, onDelete }: StudyModalProps) => {
@@ -63,7 +63,7 @@ const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply, onDelete }
                     </ModalCloseButton>
                 </ModalHeader>
                 <ModalBody>
-                    <StudyDescription>{study.description}</StudyDescription>
+                    <StudyContent>{study.content}</StudyContent>
                     <MemberList>
                         <MemberListTitle>모집된 회원 ({study.members.length}명)</MemberListTitle>
                         <MemberListItems>
@@ -76,7 +76,15 @@ const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply, onDelete }
                     </MemberList>
                 </ModalBody>
                 <ModalFooter>
-                    {study.participated ? (
+                    {study.mine && (
+                        <ApplyButton
+                            onClick={(e) => onDelete(study.studyCardId, e)}
+                            style={{ backgroundColor: '#F87171', color: '#FFFFFF' }}
+                        >
+                            스터디 모집 취소
+                        </ApplyButton>
+                    )}
+                    {!study.mine && (study.participated ? (
                         <ApplyButton
                             onClick={() => onCancelApply(study.id)}
                         >
@@ -95,7 +103,7 @@ const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply, onDelete }
                         >
                             {isApplyDisabled ? '모집이 완료된 스터디입니다' : '신청하기'}
                         </ApplyButton>
-                    )}
+                    ))}
                 </ModalFooter>
             </ModalWrapper>
         </ModalContainer>

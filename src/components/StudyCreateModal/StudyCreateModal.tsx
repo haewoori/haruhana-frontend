@@ -31,11 +31,10 @@ import {
   ReadOnlyDateDisplay
 } from './StudyCreateModal.style';
 import DatePicker from '@/components/DatePicker/DatePicker';
-import { createStudy } from '@/api/study/createStudyApi';
 import { useToast } from '@/hooks/useToast';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { StudyType, studyTypeToApiCategory } from '@/types/study/study';
+import { StudyType } from '@/types/study/study';
 
 interface StudyCreateModalProps {
   isOpen: boolean;
@@ -46,7 +45,7 @@ interface StudyCreateModalProps {
 
 export interface StudyFormData {
   title: string;
-  description: string;
+  content: string;
   type: StudyType;
   isOnline: boolean;
   totalMembers: number;
@@ -62,7 +61,7 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
 
   const initialFormData: StudyFormData = {
     title: '',
-    description: '',
+    content: '',
     type: StudyType.CERTIFICATE,
     isOnline: true,
     totalMembers: 5,
@@ -148,7 +147,7 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
   const handleTypeChange = (value: string) => {
     setFormData(prev => ({
       ...prev,
-      type: value === 'certificate' ? StudyType.CERTIFICATE : StudyType.HOBBY
+      type: value as StudyType
     }));
     setTouched((prev) => ({ ...prev, type: true }));
     validateField('type', value);
@@ -186,13 +185,13 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
           delete newErrors.totalMembers;
         }
         break;
-      case 'description':
+      case 'content':
         if (!value.trim()) {
-          newErrors.description = '스터디 내용을 입력해주세요';
+          newErrors.content = '스터디 내용을 입력해주세요';
         } else if (value.length > 1000) {
-          newErrors.description = '스터디 내용은 최대 1000자까지 입력 가능합니다';
+          newErrors.content = '스터디 내용은 최대 1000자까지 입력 가능합니다';
         } else {
-          delete newErrors.description;
+          delete newErrors.content;
         }
         break;
       default:
@@ -241,11 +240,11 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
       isValid = false;
     }
 
-    if (!formData.description.trim()) {
-      newErrors.description = '스터디 내용을 입력해주세요';
+    if (!formData.content.trim()) {
+      newErrors.content = '스터디 내용을 입력해주세요';
       isValid = false;
-    } else if (formData.description.length > 1000) {
-      newErrors.description = '스터디 내용은 최대 1000자까지 입력 가능합니다';
+    } else if (formData.content.length > 1000) {
+      newErrors.content = '스터디 내용은 최대 1000자까지 입력 가능합니다';
       isValid = false;
     }
 
@@ -341,7 +340,7 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
                         id="certificate"
                         name="type"
                         checked={formData.type === StudyType.CERTIFICATE}
-                        onChange={() => handleTypeChange('certificate')}
+                        onChange={() => handleTypeChange(StudyType.CERTIFICATE)}
                     />
                     <RadioLabel htmlFor="certificate">자격증</RadioLabel>
                   </RadioOption>
@@ -351,7 +350,7 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
                         id="hobby"
                         name="type"
                         checked={formData.type === StudyType.HOBBY}
-                        onChange={() => handleTypeChange('hobby')}
+                        onChange={() => handleTypeChange(StudyType.HOBBY)}
                     />
                     <RadioLabel htmlFor="hobby">취미</RadioLabel>
                   </RadioOption>
@@ -429,23 +428,23 @@ const StudyCreateModal = ({ isOpen, onClose, onSave, onSuccess }: StudyCreateMod
             </FormGroup>
 
             <FormGroup>
-              <FormLabel htmlFor="description">스터디 내용</FormLabel>
+              <FormLabel htmlFor="content">스터디 내용</FormLabel>
               <InputContainer>
                 <TextArea
-                    id="description"
-                    name="description"
-                    value={formData.description}
+                    id="content"
+                    name="content"
+                    value={formData.content}
                     onChange={handleChange}
                     placeholder="스터디 진행 방식, 일정, 목표 등을 설명해주세요"
                     maxLength={1000}
                     style={{
-                      borderColor: touched.description && errors.description ? '#f56565' : undefined
+                      borderColor: touched.content && errors.content ? '#f56565' : undefined
                     }}
                 />
               </InputContainer>
               <MessageContainer>
-                {touched.description && errors.description && <ErrorMessage>{errors.description}</ErrorMessage>}
-                <CharCount>{formData.description.length}/1000</CharCount>
+                {touched.content && errors.content && <ErrorMessage>{errors.content}</ErrorMessage>}
+                <CharCount>{formData.content.length}/1000</CharCount>
               </MessageContainer>
             </FormGroup>
             <ButtonContainer>

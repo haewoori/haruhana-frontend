@@ -1,93 +1,82 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSelector } from 'react-redux';
+import {useCallback, useEffect, useState} from 'react';
+import {useRouter} from 'next/navigation';
+import {useSelector} from 'react-redux';
 import {
-    MdFilterList,
     MdAccessTime,
+    MdCalendarToday,
     MdCheck,
     MdClear,
-    MdPerson,
-    MdCalendarToday,
     MdClose,
-    MdInfo,
+    MdDelete,
     MdEdit,
-    MdCampaign,
-    MdFilterAlt,
+    MdFilterList,
+    MdFirstPage,
+    MdInfo,
     MdKeyboardArrowLeft,
     MdKeyboardArrowRight,
-    MdFirstPage,
     MdLastPage,
-    MdDelete
+    MdPerson
 } from 'react-icons/md';
 
-import { useToast } from '@/hooks/useToast';
-import { ToastContainer } from '@/components/Toast';
+import {useToast} from '@/hooks/useToast';
+import {ToastContainer} from '@/components/Toast';
 import StudyModal from './StudyModal';
-import StudyCreateModal, { StudyFormData } from '@/components/StudyCreateModal/StudyCreateModal';
-import { formatDate } from '@/utils/dateUtils';
-import { getStudies } from '@/api/study/getStudyApi';
-import { adaptStudyCardToStudy } from '@/utils/studyAdapter';
-import { deleteStudy } from '@/api/study/deleteStudyApi';
-import { applyStudy } from '@/api/study/applyStudyApi';
+import StudyCreateModal, {StudyFormData} from '@/components/StudyCreateModal/StudyCreateModal';
+import {formatDate} from '@/utils/dateUtils';
+import {getStudies} from '@/api/study/getStudyApi';
+import {adaptStudyCardToStudy} from '@/utils/studyAdapter';
+import {deleteStudy} from '@/api/study/deleteStudyApi';
+import {applyStudy} from '@/api/study/applyStudyApi';
 
 import PageHeader from '@/components/PageHeader/PageHeader';
 import AnnouncementBox from '@/components/AnnouncementBox/AnnouncementBox';
 import FloatingButton from '@/components/FloatingButton/FloatingButton';
 
 import {
-    StudyContainer,
-    StudyContentWrapper,
-    MainContent,
-    StudyListContainer,
-    StudyCard,
-    CardHeader,
-    CardBody,
-    CardFooter,
-    StatusTag,
-    TagsContainer,
-    StudyTypeTag,
-    OnlineTag,
-    ProfileSection,
-    ProfileImage,
-    UserInfo,
-    UserName,
-    StudyTitle,
-    StudyInfoContainer,
-    MemberCount,
-    MemberCountValue,
-    Deadline,
-    DeadlineValue,
-    LoadingContainer,
-    LoadingSpinner,
-    EmptyStateText,
-    ErrorText,
-    colors,
-    StatusIndicator,
     ApplyBadge,
     CardActions,
-    ViewDetailsButton,
+    CardBody,
+    CardFooter,
+    CardHeader,
+    ClearFiltersButton,
+    colors,
+    Deadline,
+    DeadlineValue,
+    DeleteButton,
+    EmptyStateText,
+    ErrorText,
     FilterButton,
     FilterContainer,
-    FilterBadge,
     FilterDivider,
-    ClearFiltersButton,
-    PaginationContainer,
-    PaginationButton,
-    PaginationInfo,
+    LoadingContainer,
+    LoadingSpinner,
+    MainContent,
+    MemberCount,
+    OnlineTag,
     PageNumbersContainer,
+    PaginationButton,
+    PaginationContainer,
     PaginationEllipsis,
-    DeleteButton, // 추가된 DeleteButton
+    ProfileImage,
+    ProfileSection,
+    StatusIndicator,
+    StatusTag,
+    StudyCard,
+    StudyContainer,
+    StudyContentWrapper,
+    StudyInfoContainer,
+    StudyListContainer,
+    StudyTitle,
+    StudyTypeTag,
+    TagsContainer,
+    UserInfo,
+    UserName,
+    ViewDetailsButton,
 } from './page.style';
 
-import {
-    Study,
-    StudyStatusType,
-    StudyFilterStatusType,
-    StudyFilters,
-    StudyType, parseStudyType, studyTypeToApiCategory
-} from '@/types/study/study';
+import {Study, StudyFilters, StudyFilterStatusType, StudyStatusType, StudyType} from '@/types/study/study';
 import {createStudy} from "@/api/study/createStudyApi";
 import {cancelStudy} from "@/api/study/cancelStudyApi";
 
@@ -385,7 +374,6 @@ const StudyClient = () => {
                     prevStudies.map(study =>
                         study.id === studyId ? {
                             ...study,
-                            isApplied: true,
                             participated: true,
                             currentMembers: study.currentMembers + 1
                         } : study
@@ -493,13 +481,12 @@ const StudyClient = () => {
 
     // 새 스터디 저장 핸들러
     const handleSaveStudy = useCallback(async (studyData: StudyFormData) => {
-        const apiCategory = studyTypeToApiCategory(studyData.type);
         await createStudy(
             studyData.title,
-            studyData.description,
+            studyData.content,
             studyData.totalMembers,
             studyData.deadline,
-            apiCategory,
+            studyData.type,
             studyData.isOnline
         );
 
@@ -604,8 +591,8 @@ const StudyClient = () => {
                                         </StudyInfoContainer>
                                     </CardBody>
                                     <CardFooter>
-                                        <StatusIndicator isApplied={study.isApplied} status={study.status}>
-                                            <ApplyBadge isApplied={study.isApplied} status={study.status}>
+                                        <StatusIndicator isApplied={study.participated} status={study.status}>
+                                            <ApplyBadge isApplied={study.participated} status={study.status}>
                                                 {study.participated ? (
                                                     <>
                                                         <MdCheck size={16} style={{ marginRight: '4px' }} />
