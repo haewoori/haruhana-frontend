@@ -41,6 +41,8 @@ export interface StudyCardItem {
   online: boolean;
   available: boolean;
   registered: boolean;
+  participated: boolean;
+  mine: boolean;
 }
 
 // API 응답 전체 타입

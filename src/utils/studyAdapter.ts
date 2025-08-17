@@ -19,12 +19,14 @@ export const adaptStudyCardToStudy = (studyCard: StudyCardItem): Study => {
       profileImage: studyCard.userProfile.profileImageUrl || 'https://randomuser.me/api/portraits/men/32.jpg' // 기본 이미지 제공
     },
     title: studyCard.title,
+    description: studyCard.content,
+    mine: studyCard.mine,
     currentMembers: 1, // API에서 제공하지 않음, 기본값 설정
     totalMembers: 10, // API에서 제공하지 않음, 기본값 설정
     startDate: new Date().toISOString().split('T')[0], // API에서 제공하지 않음, 현재 날짜로 설정
     deadline: studyCard.dueDate,
-    description: studyCard.content,
     members: [{ id: studyCard.userProfile.username, name: studyCard.userProfile.username }], // 작성자만 멤버로 추가
-    isApplied: studyCard.registered
+    isApplied: studyCard.registered,
+    participated: studyCard.participated
   };
 };

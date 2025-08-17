@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from 'react';
 import { MdClose, MdDelete } from 'react-icons/md';
-import { StudyStatusType, StudyMember } from '@/types/study/study';
+import {StudyStatusType, StudyMember, Study} from '@/types/study/study';
 import {
     ModalContainer,
     ModalWrapper,
@@ -22,16 +22,7 @@ import {
 interface StudyModalProps {
     isOpen: boolean;
     onClose: () => void;
-    study: {
-        id: string;
-        studyCardId: string; // studyCardId 필드 추가
-        title: string;
-        description: string;
-        members: StudyMember[];
-        isApplied: boolean;
-        status: StudyStatusType;
-        isMine?: boolean; // isMine 필드 추가
-    } | null;
+    study: Study | null;
     onApply: (studyId: string) => void;
     onCancelApply: (studyId: string) => void;
     onDelete: (studyCardId: string, event?: React.MouseEvent) => Promise<void>; // 삭제 핸들러 추가
@@ -85,11 +76,11 @@ const StudyModal = ({ isOpen, onClose, study, onApply, onCancelApply, onDelete }
                     </MemberList>
                 </ModalBody>
                 <ModalFooter>
-                    {study.isApplied ? (
+                    {study.participated ? (
                         <ApplyButton
                             onClick={() => onCancelApply(study.id)}
                         >
-                            신청 취소하기
+                            신청 취소
                         </ApplyButton>
                     ) : (
                         <ApplyButton
