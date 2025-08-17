@@ -537,7 +537,9 @@ const StudyClient = () => {
                             <ErrorText>{error}</ErrorText>
                         ) : studies.length === 0 ? (
                             <EmptyStateText>
-                                현재 진행 중인 스터디가 없습니다. 첫 번째 스터디를 만들어보세요!
+                                {filters.status === 'all' && '진행 중인 스터디가 없습니다. 첫 번째 스터디를 만들어보세요!'}
+                                {filters.status === StudyStatusType.RECRUITING && '모집 중인 스터디가 없습니다. 스터디를 모집해보세요!'}
+                                {filters.status === StudyStatusType.COMPLETED && '모집 완료된 스터디가 없습니다. 스터디를 신청해보세요!'}
                             </EmptyStateText>
                         ) : dateFilteredStudiesCount === 0 ? (
                             <EmptyStateText>
@@ -546,7 +548,9 @@ const StudyClient = () => {
                             </EmptyStateText>
                         ) : filteredStudies.length === 0 ? (
                             <EmptyStateText>
-                                현재 필터 조건에 맞는 스터디가 없습니다. 다른 필터를 선택해보세요.
+                                {filters.status === 'all' && '진행 중인 스터디가 없습니다. 첫 번째 스터디를 만들어보세요!'}
+                                {filters.status === StudyStatusType.RECRUITING && '모집 중인 스터디가 없습니다. 스터디를 모집해보세요!'}
+                                {filters.status === StudyStatusType.COMPLETED && '모집 완료된 스터디가 없습니다. 스터디를 신청해보세요!'}
                             </EmptyStateText>
                         ) : (
                             filteredStudies.map(study => (
